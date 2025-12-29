@@ -106,9 +106,13 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
   };
 
   const currentVideo = queue[0];
+  const currentMediaType = currentVideo ? detectMediaType(currentVideo.url).type : null;
 
   useEffect(() => {
     const syncInterval = setInterval(async () => {
+      // Only sync direct video/audio files, not YouTube embeds (which are iframes)
+      if (currentMediaType !== 'direct') return;
+
       const video = videoRef.current;
       if (!video) return;
 
@@ -139,7 +143,7 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
     }, 500);
 
     return () => clearInterval(syncInterval);
-  }, [room.id, currentVideo?.id]);
+  }, [room.id, currentVideo?.id, currentMediaType]);
 
   return (
     <div className="flex flex-col h-full w-full gap-4 p-4">
@@ -163,34 +167,44 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
       <Card className="flex-1 flex flex-col gap-4 p-4 min-h-0">
         <div className="w-full bg-slate-900 rounded-lg overflow-hidden flex flex-col items-center justify-center" style={{ aspectRatio: '16/9' }}>
           {currentVideo ? (
-            <div className="w-full h-full flex flex-col">
+            <div className="w-full h-full flex flex-col relative">
               {(() => {
                 const media = detectMediaType(currentVideo.url);
                 return (
                   <>
                     {media.type === 'youtube' && media.embedUrl ? (
-                      <iframe
-                        src={media.embedUrl}
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        loading="lazy"
-                        data-testid="youtube-video-player"
-                      />
+                      <>
+                        <iframe
+                          src={media.embedUrl}
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                          loading="lazy"
+                          data-testid="youtube-video-player"
+                        />
+                        <div className="absolute bottom-2 left-2 bg-black/70 px-2 py-1 rounded text-xs text-muted-foreground">
+                          Note: Sync not available for YouTube embeds
+                        </div>
+                      </>
                     ) : (
-                      <video
-                        ref={videoRef}
-                        key={currentVideo.id}
-                        controls
-                        className="w-full h-full"
-                        data-testid="video-player"
-                        onError={() => setLoadError("Unable to play this URL. Use YouTube or direct video links (MP4, WebM, OGG)")}
-                        onLoadStart={() => setLoadError(null)}
-                      >
-                        <source src={currentVideo.url} type="video/mp4" />
-                        Your browser does not support HTML5 video.
-                      </video>
+                      <>
+                        <video
+                          ref={videoRef}
+                          key={currentVideo.id}
+                          controls
+                          className="w-full h-full"
+                          data-testid="video-player"
+                          onError={() => setLoadError("Unable to play this URL. Use YouTube or direct video links (MP4, WebM, OGG)")}
+                          onLoadStart={() => setLoadError(null)}
+                        >
+                          <source src={currentVideo.url} type="video/mp4" />
+                          Your browser does not support HTML5 video.
+                        </video>
+                        <div className="absolute bottom-2 left-2 bg-green-900/70 px-2 py-1 rounded text-xs text-green-200">
+                          Synced playback enabled
+                        </div>
+                      </>
                     )}
                     {loadError && (
                       <p className="text-xs text-red-300 text-center p-2 bg-slate-800">{loadError}</p>

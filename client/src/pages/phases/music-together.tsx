@@ -106,9 +106,13 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
   };
 
   const currentSong = queue[0];
+  const currentMediaType = currentSong ? detectMediaType(currentSong.url).type : null;
 
   useEffect(() => {
     const syncInterval = setInterval(async () => {
+      // Only sync direct audio/video files, not YouTube/Spotify embeds (which are iframes)
+      if (currentMediaType !== 'direct') return;
+
       const audio = audioRef.current;
       if (!audio) return;
 
@@ -139,7 +143,7 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
     }, 500);
 
     return () => clearInterval(syncInterval);
-  }, [room.id, currentSong?.id]);
+  }, [room.id, currentSong?.id, currentMediaType]);
 
   return (
     <div className="flex flex-col h-full w-full gap-4 p-4">
@@ -177,38 +181,47 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
                   return (
                     <>
                       {media.type === 'spotify' && media.embedUrl ? (
-                        <iframe
-                          src={media.embedUrl}
-                          width="100%"
-                          height="152"
-                          frameBorder="0"
-                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                          loading="lazy"
-                          data-testid="spotify-player"
-                        />
+                        <>
+                          <iframe
+                            src={media.embedUrl}
+                            width="100%"
+                            height="152"
+                            frameBorder="0"
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            data-testid="spotify-player"
+                          />
+                          <p className="text-xs text-muted-foreground text-center">Note: Sync not available for Spotify embeds</p>
+                        </>
                       ) : media.type === 'youtube' && media.embedUrl ? (
-                        <iframe
-                          src={media.embedUrl}
-                          width="100%"
-                          height="315"
-                          frameBorder="0"
-                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                          loading="lazy"
-                          data-testid="youtube-player"
-                        />
+                        <>
+                          <iframe
+                            src={media.embedUrl}
+                            width="100%"
+                            height="315"
+                            frameBorder="0"
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            data-testid="youtube-player"
+                          />
+                          <p className="text-xs text-muted-foreground text-center">Note: Sync not available for YouTube embeds</p>
+                        </>
                       ) : (
-                        <audio
-                          ref={audioRef}
-                          key={currentSong.id}
-                          controls
-                          className="w-full max-w-xs"
-                          data-testid="audio-player"
-                          onError={() => setLoadError("Unable to play this URL. Supported: Spotify, YouTube, or direct audio links (MP3, OGG, WAV)")}
-                          onLoadStart={() => setLoadError(null)}
-                        >
-                          <source src={currentSong.url} type="audio/mpeg" />
-                          Your browser does not support HTML5 audio.
-                        </audio>
+                        <>
+                          <audio
+                            ref={audioRef}
+                            key={currentSong.id}
+                            controls
+                            className="w-full max-w-xs"
+                            data-testid="audio-player"
+                            onError={() => setLoadError("Unable to play this URL. Supported: Spotify, YouTube, or direct audio links (MP3, OGG, WAV)")}
+                            onLoadStart={() => setLoadError(null)}
+                          >
+                            <source src={currentSong.url} type="audio/mpeg" />
+                            Your browser does not support HTML5 audio.
+                          </audio>
+                          <p className="text-xs text-green-400 text-center">Synced playback enabled</p>
+                        </>
                       )}
                       {loadError && (
                         <p className="text-xs text-red-300 text-center">{loadError}</p>
