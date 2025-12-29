@@ -1,10 +1,10 @@
 import { db } from "./db";
 import {
-  rooms, players, questions, responses,
-  type Room, type Player, type Question, type Response,
+  rooms, players, questions, responses, queueItems, chatMessages,
+  type Room, type Player, type Question, type Response, type QueueItem, type ChatMessage,
   type CreateRoomRequest, type JoinRoomRequest,
   insertRoomSchema, insertPlayerSchema, insertResponseSchema,
-  insertQuestionSchema
+  insertQuestionSchema, insertQueueItemSchema, insertChatMessageSchema
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -28,6 +28,15 @@ export interface IStorage {
   // Responses
   createResponse(response: any): Promise<Response>;
   getResponsesByRoomId(roomId: number): Promise<Response[]>;
+
+  // Queue Items
+  createQueueItem(item: any): Promise<QueueItem>;
+  getQueueByRoomId(roomId: number): Promise<QueueItem[]>;
+  deleteQueueItem(id: number): Promise<void>;
+
+  // Chat Messages
+  createChatMessage(message: any): Promise<ChatMessage>;
+  getChatMessagesByRoomId(roomId: number): Promise<ChatMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -92,6 +101,28 @@ export class DatabaseStorage implements IStorage {
 
   async getResponsesByRoomId(roomId: number): Promise<Response[]> {
     return await db.select().from(responses).where(eq(responses.roomId, roomId));
+  }
+
+  async createQueueItem(item: any): Promise<QueueItem> {
+    const [created] = await db.insert(queueItems).values(item).returning();
+    return created;
+  }
+
+  async getQueueByRoomId(roomId: number): Promise<QueueItem[]> {
+    return await db.select().from(queueItems).where(eq(queueItems.roomId, roomId));
+  }
+
+  async deleteQueueItem(id: number): Promise<void> {
+    await db.delete(queueItems).where(eq(queueItems.id, id));
+  }
+
+  async createChatMessage(message: any): Promise<ChatMessage> {
+    const [created] = await db.insert(chatMessages).values(message).returning();
+    return created;
+  }
+
+  async getChatMessagesByRoomId(roomId: number): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages).where(eq(chatMessages.roomId, roomId));
   }
 }
 

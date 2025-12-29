@@ -1,49 +1,134 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useNextPhase, useSubmitResponse } from "@/hooks/use-game";
-import { Film, Play, ArrowLeft, Search, Youtube } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useNextPhase } from "@/hooks/use-game";
+import { Film, Play, Pause, ArrowLeft, Search, Trash2, Plus, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-export default function MovieNightPhase({ room, responses, currentPlayer, otherPlayer }: { 
+export default function MovieNightPhase({ room, players, currentPlayer, otherPlayer }: { 
   room: any, 
-  responses: any[], 
+  players: any[],
   currentPlayer: any, 
   otherPlayer?: any 
 }) {
+  const { toast } = useToast();
   const nextPhase = useNextPhase();
-  const submit = useSubmitResponse();
-  const [url, setUrl] = useState("");
-  
-  // We use questionId -1 for video sync
-  const currentVideoResponse = responses.find(r => r.questionId === -1);
-  const currentVideoUrl = currentVideoResponse?.answer;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentUrl, setCurrentUrl] = useState("");
+  const [newUrl, setNewUrl] = useState("");
+  const [message, setMessage] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleSync = () => {
-    if (!url) return;
-    let videoId = "";
-    try {
-      if (url.includes("v=")) {
-        videoId = url.split("v=")[1].split("&")[0];
-      } else if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1].split("?")[0];
+  const { data: queue = [], refetch: refetchQueue } = useQuery({
+    queryKey: ["/api/queue", room.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/queue/${room.id}`);
+      return res.json();
+    },
+    refetchInterval: 2000,
+  });
+
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ["/api/chat", room.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/chat/${room.id}`);
+      return res.json();
+    },
+    refetchInterval: 2000,
+  });
+
+  const addToQueueMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const res = await fetch("/api/queue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: room.id,
+          title: url.split("/").pop() || "Video",
+          url,
+          type: "video",
+          addedBy: currentPlayer.id,
+        }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setNewUrl("");
+      refetchQueue();
+      toast({ title: "Added to queue" });
+    },
+  });
+
+  const sendChatMutation = useMutation({
+    mutationFn: async (text: string) => {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: room.id,
+          playerId: currentPlayer.id,
+          message: text,
+        }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setMessage("");
+      refetchMessages();
+    },
+  });
+
+  const deleteFromQueueMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await fetch(`/api/queue/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      refetchQueue();
+    },
+  });
+
+  useEffect(() => {
+    if (queue.length > 0 && !currentUrl) {
+      setCurrentUrl(queue[0].url);
+    }
+  }, [queue, currentUrl]);
+
+  const handlePlayToggle = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
       }
-    } catch (e) {}
+      setIsPlaying(!isPlaying);
+    }
+  };
 
-    if (videoId) {
-      submit.mutate({ roomId: room.id, questionId: -1, answer: videoId });
+  const handleAddToQueue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newUrl.trim()) {
+      addToQueueMutation.mutate(newUrl);
+    }
+  };
+
+  const handleSendChat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      sendChatMutation.mutate(message);
     }
   };
 
   return (
-    <div className="space-y-6 text-center py-4 flex flex-col h-full">
-      <div className="flex items-center justify-between px-2">
+    <div className="flex h-full gap-4 p-4 flex-col">
+      <div className="flex items-center justify-between">
         <Button 
           variant="ghost" 
           size="sm" 
           className="gap-2"
           onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+          data-testid="button-back"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
@@ -53,62 +138,113 @@ export default function MovieNightPhase({ room, responses, currentPlayer, otherP
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-6">
-        {currentVideoUrl ? (
-          <Card className="p-0 overflow-hidden bg-black aspect-video flex items-center justify-center">
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${currentVideoUrl}?autoplay=1`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </Card>
-        ) : (
-          <Card className="p-8 border-dashed border-2 bg-blue-50/50 flex flex-col items-center justify-center gap-4 min-h-[200px]">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <Youtube className="w-8 h-8 text-blue-500" />
+      <div className="flex flex-1 gap-4 min-h-0">
+        <div className="flex-1 flex flex-col gap-4">
+          <Card className="flex-1 flex flex-col gap-4 p-4">
+            <div className="bg-black rounded-lg overflow-hidden flex-1 flex items-center justify-center">
+              {currentUrl ? (
+                <video
+                  ref={videoRef}
+                  src={currentUrl}
+                  className="w-full h-full object-contain"
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  data-testid="video-player"
+                />
+              ) : (
+                <div className="text-muted-foreground text-center">
+                  <p>Add a video to the queue</p>
+                </div>
+              )}
             </div>
-            <p className="text-blue-600 font-medium italic">
-              Paste a YouTube link to watch together!
-            </p>
+
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePlayToggle}
+                data-testid="button-play-pause"
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                {videoRef.current ? `${Math.round(videoRef.current.currentTime)}s` : "0s"}
+              </div>
+            </div>
           </Card>
-        )}
 
-        <div className="space-y-3">
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Paste YouTube Link..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="rounded-2xl border-2 focus-visible:ring-blue-400"
-            />
-            <Button 
-              onClick={handleSync}
-              className="bg-blue-500 hover:bg-blue-600 rounded-2xl"
-              size="icon"
-              disabled={submit.isPending}
-            >
-              <Search className="w-5 h-5" />
-            </Button>
-          </div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-            Everyone in the room will see the video
-          </p>
+          <Card className="p-4">
+            <h3 className="font-semibold mb-3">Queue</h3>
+            <form onSubmit={handleAddToQueue} className="flex gap-2 mb-4">
+              <Input
+                placeholder="Enter video URL"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                data-testid="input-video-url"
+              />
+              <Button type="submit" size="icon" data-testid="button-add-queue">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </form>
+
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {queue.map((item: any) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between bg-muted p-2 rounded hover-elevate"
+                  data-testid={`queue-item-${item.id}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteFromQueueMutation.mutate(item.id)}
+                    data-testid={`button-remove-${item.id}`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
-      </div>
 
-      {currentVideoUrl && (
-        <Button 
-          variant="outline" 
-          onClick={() => submit.mutate({ roomId: room.id, questionId: -1, answer: "" })}
-          className="border-blue-200 text-blue-600 hover:bg-blue-50"
-        >
-          Change Video
-        </Button>
-      )}
+        <Card className="w-64 flex flex-col p-4 gap-4">
+          <h3 className="font-semibold">Chat</h3>
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+            {messages.map((msg: any) => {
+              const player = players.find((p) => p.id === msg.playerId);
+              return (
+                <div key={msg.id} className="text-sm" data-testid={`chat-message-${msg.id}`}>
+                  <p className="font-medium text-xs text-muted-foreground">{player?.name}</p>
+                  <p className="text-sm break-words">{msg.message}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <form onSubmit={handleSendChat} className="flex gap-2">
+            <Input
+              placeholder="Say something..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="text-sm"
+              data-testid="input-chat"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              variant="default"
+              data-testid="button-send-chat"
+            >
+              <Send className="w-3 h-3" />
+            </Button>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }

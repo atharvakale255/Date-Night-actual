@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertResponseSchema, responses } from "@shared/schema";
+import { insertResponseSchema, insertQueueItemSchema, insertChatMessageSchema, responses } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 
@@ -121,6 +121,58 @@ export async function registerRoutes(
       res.status(201).json(response);
     } catch (err) {
       res.status(400).json({ message: "Invalid input" });
+    }
+  });
+
+  // Queue Items
+  app.post("/api/queue", async (req, res) => {
+    try {
+      const input = insertQueueItemSchema.parse(req.body);
+      const item = await storage.createQueueItem(input);
+      res.status(201).json(item);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid input" });
+    }
+  });
+
+  app.get("/api/queue/:roomId", async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const queue = await storage.getQueueByRoomId(roomId);
+      res.json(queue);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  app.delete("/api/queue/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteQueueItem(id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  // Chat Messages
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const input = insertChatMessageSchema.parse(req.body);
+      const message = await storage.createChatMessage(input);
+      res.status(201).json(message);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid input" });
+    }
+  });
+
+  app.get("/api/chat/:roomId", async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const messages = await storage.getChatMessagesByRoomId(roomId);
+      res.json(messages);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid request" });
     }
   });
 

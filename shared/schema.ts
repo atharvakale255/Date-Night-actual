@@ -38,6 +38,24 @@ export const responses = pgTable("responses", {
   answer: text("answer").notNull(),
 });
 
+export const queueItems = pgTable("queue_items", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull(),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  type: text("type").notNull(), // "video" or "audio"
+  addedBy: integer("added_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull(),
+  playerId: integer("player_id").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const roomsRelations = relations(rooms, ({ many }) => ({
   players: many(players),
@@ -67,12 +85,36 @@ export const responsesRelations = relations(responses, ({ one }) => ({
   }),
 }));
 
+export const queueItemsRelations = relations(queueItems, ({ one }) => ({
+  room: one(rooms, {
+    fields: [queueItems.roomId],
+    references: [rooms.id],
+  }),
+  addedByPlayer: one(players, {
+    fields: [queueItems.addedBy],
+    references: [players.id],
+  }),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  room: one(rooms, {
+    fields: [chatMessages.roomId],
+    references: [rooms.id],
+  }),
+  player: one(players, {
+    fields: [chatMessages.playerId],
+    references: [players.id],
+  }),
+}));
+
 // === SCHEMAS ===
 
 export const insertRoomSchema = createInsertSchema(rooms).omit({ id: true, createdAt: true });
 export const insertPlayerSchema = createInsertSchema(players).omit({ id: true, joinedAt: true, score: true });
 export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true });
 export const insertResponseSchema = createInsertSchema(responses).omit({ id: true });
+export const insertQueueItemSchema = createInsertSchema(queueItems).omit({ id: true, createdAt: true });
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 
 // === TYPES ===
 
@@ -80,6 +122,8 @@ export type Room = typeof rooms.$inferSelect;
 export type Player = typeof players.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type Response = typeof responses.$inferSelect;
+export type QueueItem = typeof queueItems.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;
 
 export type CreateRoomRequest = { name: string; avatar?: string; metDate?: string };
 export type JoinRoomRequest = { code: string; name: string; avatar?: string };
