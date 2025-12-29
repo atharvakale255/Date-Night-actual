@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNextPhase } from "@/hooks/use-game";
-import { Film, Play, Pause, ArrowLeft, Search, Trash2, Plus, Send } from "lucide-react";
+import { Film, ArrowLeft, Trash2, Plus, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MovieNightPhase({ room, players, currentPlayer, otherPlayer }: { 
@@ -15,11 +15,8 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
 }) {
   const { toast } = useToast();
   const nextPhase = useNextPhase();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [currentUrl, setCurrentUrl] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [message, setMessage] = useState("");
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const { data: queue = [], refetch: refetchQueue } = useQuery({
     queryKey: ["/api/queue", room.id],
@@ -46,7 +43,7 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId: room.id,
-          title: url.split("/").pop() || "Video",
+          title: url.split("/").pop()?.split("?")[0] || "Video",
           url,
           type: "video",
           addedBy: currentPlayer.id,
@@ -89,23 +86,6 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
     },
   });
 
-  useEffect(() => {
-    if (queue.length > 0 && !currentUrl) {
-      setCurrentUrl(queue[0].url);
-    }
-  }, [queue, currentUrl]);
-
-  const handlePlayToggle = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
   const handleAddToQueue = (e: React.FormEvent) => {
     e.preventDefault();
     if (newUrl.trim()) {
@@ -120,9 +100,11 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
     }
   };
 
+  const currentVideo = queue[0];
+
   return (
-    <div className="flex h-full gap-4 p-4 flex-col">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full w-full gap-6 p-6">
+      <div className="flex items-center justify-between shrink-0">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -132,103 +114,105 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-        <div className="flex items-center gap-2 text-blue-500">
-          <Film className="w-5 h-5" />
-          <span className="font-bold text-sm uppercase tracking-widest">Movie Night</span>
+        <div className="flex items-center gap-3 text-blue-600">
+          <Film className="w-6 h-6" />
+          <span className="font-bold text-base">Movie Night</span>
         </div>
+        <div className="w-20"></div>
       </div>
 
-      <div className="flex flex-1 gap-4 min-h-0">
-        <div className="flex-1 flex flex-col gap-4">
-          <Card className="flex-1 flex flex-col gap-4 p-4">
-            <div className="bg-black rounded-lg overflow-hidden flex-1 flex items-center justify-center">
-              {currentUrl ? (
-                <video
-                  ref={videoRef}
-                  src={currentUrl}
-                  className="w-full h-full object-contain"
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  data-testid="video-player"
-                />
+      <div className="flex flex-1 gap-6 min-h-0">
+        <div className="flex-1 flex flex-col gap-6">
+          <Card className="flex-1 flex flex-col gap-6 p-6">
+            <div className="bg-slate-900 rounded-xl overflow-hidden flex-1 flex items-center justify-center">
+              {currentVideo ? (
+                <div className="text-center space-y-4 p-8">
+                  <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto">
+                    <Film className="w-10 h-10 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold">{currentVideo.title}</p>
+                    <p className="text-slate-400 text-sm mt-2">Added by {currentVideo.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
+                    <p className="text-slate-500 text-xs mt-4 max-w-md mx-auto break-all">{currentVideo.url}</p>
+                  </div>
+                </div>
               ) : (
-                <div className="text-muted-foreground text-center">
-                  <p>Add a video to the queue</p>
+                <div className="text-slate-400 text-center">
+                  <p className="text-lg">Add a video to the queue to get started</p>
                 </div>
               )}
             </div>
-
-            <div className="flex gap-2 items-center">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePlayToggle}
-                data-testid="button-play-pause"
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                {videoRef.current ? `${Math.round(videoRef.current.currentTime)}s` : "0s"}
-              </div>
-            </div>
           </Card>
 
-          <Card className="p-4">
-            <h3 className="font-semibold mb-3">Queue</h3>
-            <form onSubmit={handleAddToQueue} className="flex gap-2 mb-4">
+          <Card className="p-6 shrink-0">
+            <h3 className="font-semibold text-lg mb-4">Add to Queue</h3>
+            <form onSubmit={handleAddToQueue} className="flex gap-3">
               <Input
-                placeholder="Enter video URL"
+                placeholder="Paste video URL here..."
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
                 data-testid="input-video-url"
+                className="flex-1"
               />
-              <Button type="submit" size="icon" data-testid="button-add-queue">
+              <Button type="submit" size="icon" className="shrink-0" data-testid="button-add-queue">
                 <Plus className="w-4 h-4" />
               </Button>
             </form>
+          </Card>
 
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {queue.map((item: any) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between bg-muted p-2 rounded hover-elevate"
-                  data-testid={`queue-item-${item.id}`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{item.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteFromQueueMutation.mutate(item.id)}
-                    data-testid={`button-remove-${item.id}`}
+          <Card className="p-6 max-h-48 shrink-0">
+            <h3 className="font-semibold text-lg mb-4">Queue</h3>
+            <div className="space-y-3 overflow-y-auto max-h-32">
+              {queue.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No videos in queue yet</p>
+              ) : (
+                queue.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 p-3 rounded-lg hover-elevate"
+                    data-testid={`queue-item-${item.id}`}
                   >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteFromQueueMutation.mutate(item.id)}
+                      data-testid={`button-remove-${item.id}`}
+                      className="shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </div>
 
-        <Card className="w-64 flex flex-col p-4 gap-4">
-          <h3 className="font-semibold">Chat</h3>
-          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
-            {messages.map((msg: any) => {
-              const player = players.find((p) => p.id === msg.playerId);
-              return (
-                <div key={msg.id} className="text-sm" data-testid={`chat-message-${msg.id}`}>
-                  <p className="font-medium text-xs text-muted-foreground">{player?.name}</p>
-                  <p className="text-sm break-words">{msg.message}</p>
-                </div>
-              );
-            })}
+        <Card className="w-80 flex flex-col p-6 gap-4 shrink-0">
+          <h3 className="font-semibold text-lg">Chat</h3>
+          <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
+            {messages.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No messages yet</p>
+            ) : (
+              messages.map((msg: any) => {
+                const player = players.find((p) => p.id === msg.playerId);
+                return (
+                  <div key={msg.id} data-testid={`chat-message-${msg.id}`}>
+                    <p className="font-medium text-xs text-muted-foreground">{player?.name}</p>
+                    <p className="text-sm break-words mt-1">{msg.message}</p>
+                  </div>
+                );
+              })
+            )}
           </div>
 
-          <form onSubmit={handleSendChat} className="flex gap-2">
+          <form onSubmit={handleSendChat} className="flex gap-2 shrink-0">
             <Input
-              placeholder="Say something..."
+              placeholder="Message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="text-sm"
@@ -237,10 +221,10 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
             <Button
               type="submit"
               size="icon"
-              variant="default"
+              className="shrink-0"
               data-testid="button-send-chat"
             >
-              <Send className="w-3 h-3" />
+              <Send className="w-4 h-4" />
             </Button>
           </form>
         </Card>
