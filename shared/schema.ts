@@ -81,7 +81,7 @@ export type Player = typeof players.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type Response = typeof responses.$inferSelect;
 
-export type CreateRoomRequest = { name: string; avatar?: string };
+export type CreateRoomRequest = { name: string; avatar?: string; metDate?: string };
 export type JoinRoomRequest = { code: string; name: string; avatar?: string };
 
 export type GameState = {

@@ -13,7 +13,7 @@ interface SummaryProps {
   otherPlayer?: Player;
 }
 
-export default function SummaryPhase({ players, responses }: SummaryProps) {
+export default function SummaryPhase({ room, players, responses }: SummaryProps) {
   // Simple match calculation
   // Group responses by questionId
   const questionIds = Array.from(new Set(responses.map(r => r.questionId)));

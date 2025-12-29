@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertPlayerSchema, rooms, players, questions, responses, insertResponseSchema } from './schema';
+import { insertPlayerSchema, rooms, players, questions, responses, insertResponseSchema, type CreateRoomRequest, type JoinRoomRequest } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -19,7 +19,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/rooms',
-      input: z.object({ name: z.string().min(1), avatar: z.string().optional() }),
+      input: z.object({ name: z.string().min(1), avatar: z.string().optional(), metDate: z.string().optional() }),
       responses: {
         201: z.object({ roomCode: z.string(), playerId: z.number(), roomId: z.number() }),
         400: errorSchemas.validation,
@@ -51,6 +51,7 @@ export const api = {
     nextPhase: {
       method: 'POST' as const,
       path: '/api/rooms/:code/next',
+      input: z.object({ phase: z.string().optional(), round: z.number().optional() }),
       responses: {
         200: z.custom<typeof rooms.$inferSelect>(),
       },
