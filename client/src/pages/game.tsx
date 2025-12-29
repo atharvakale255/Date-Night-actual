@@ -14,6 +14,7 @@ import LobbyPhase from "./phases/lobby";
 import QuizPhase from "./phases/quiz";
 import ThisThatPhase from "./phases/this-that";
 import LikelyPhase from "./phases/likely";
+import DarePhase from "./phases/dare";
 import SummaryPhase from "./phases/summary";
 
 export default function Game() {
@@ -55,6 +56,7 @@ export default function Game() {
     case 'quiz': PhaseComponent = QuizPhase; break;
     case 'this_that': PhaseComponent = ThisThatPhase; break;
     case 'likely': PhaseComponent = LikelyPhase; break;
+    case 'dare': PhaseComponent = DarePhase; break;
     case 'summary': PhaseComponent = SummaryPhase; break;
     default: PhaseComponent = () => <div>Unknown Phase</div>;
   }
