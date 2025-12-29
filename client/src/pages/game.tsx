@@ -10,12 +10,15 @@ import canvasConfetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 
 // Phase Components
+import DashboardPhase from "./phases/dashboard";
 import LobbyPhase from "./phases/lobby";
 import QuizPhase from "./phases/quiz";
 import ThisThatPhase from "./phases/this-that";
 import LikelyPhase from "./phases/likely";
 import DarePhase from "./phases/dare";
 import SummaryPhase from "./phases/summary";
+import MovieNightPhase from "./phases/movie-night";
+import MusicTogetherPhase from "./phases/music-together";
 
 export default function Game() {
   const [, params] = useRoute("/room/:code");
@@ -52,13 +55,16 @@ export default function Game() {
   // Phase Router
   let PhaseComponent;
   switch (room.phase) {
+    case 'dashboard': PhaseComponent = DashboardPhase; break;
     case 'lobby': PhaseComponent = LobbyPhase; break;
     case 'quiz': PhaseComponent = QuizPhase; break;
     case 'this_that': PhaseComponent = ThisThatPhase; break;
     case 'likely': PhaseComponent = LikelyPhase; break;
     case 'dare': PhaseComponent = DarePhase; break;
     case 'summary': PhaseComponent = SummaryPhase; break;
-    default: PhaseComponent = () => <div>Unknown Phase</div>;
+    case 'movie_night': PhaseComponent = MovieNightPhase; break;
+    case 'music_together': PhaseComponent = MusicTogetherPhase; break;
+    default: PhaseComponent = DashboardPhase;
   }
 
   return (

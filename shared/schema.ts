@@ -8,8 +8,9 @@ import { relations } from "drizzle-orm";
 export const rooms = pgTable("rooms", {
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(),
-  phase: text("phase").notNull().default("lobby"), // lobby, quiz, this_that, likely, dare, summary
+  phase: text("phase").notNull().default("dashboard"), // dashboard, quiz, this_that, likely, dare, summary, movie_night, music_together
   round: integer("round").notNull().default(0),
+  metDate: timestamp("met_date"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

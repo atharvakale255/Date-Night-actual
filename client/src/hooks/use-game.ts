@@ -105,17 +105,21 @@ export function useNextPhase() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (code: string) => {
+    mutationFn: async ({ code, phase, round }: { code: string; phase?: string; round?: number }) => {
       const url = buildUrl(api.rooms.nextPhase.path, { code });
-      const res = await fetch(url, { method: api.rooms.nextPhase.method });
+      const res = await fetch(url, { 
+        method: api.rooms.nextPhase.method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase, round })
+      });
       if (!res.ok) throw new Error('Failed to update phase');
       return api.rooms.nextPhase.responses[200].parse(await res.json());
     },
-    onSuccess: (_, code) => {
-      queryClient.invalidateQueries({ queryKey: [api.rooms.status.path, code] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.rooms.status.path, variables.code] });
     },
     onError: () => {
-      toast({ title: "Error", description: "Could not proceed to next round", variant: "destructive" });
+      toast({ title: "Error", description: "Could not proceed", variant: "destructive" });
     }
   });
 }

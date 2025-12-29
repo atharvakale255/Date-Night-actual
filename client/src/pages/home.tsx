@@ -13,13 +13,14 @@ export default function Home() {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("🦊");
   const [roomCode, setRoomCode] = useState("");
+  const [metDate, setMetDate] = useState("");
   
   const createRoom = useCreateRoom();
   const joinRoom = useJoinRoom();
 
   const handleCreate = () => {
     if (!name) return;
-    createRoom.mutate({ name, avatar });
+    createRoom.mutate({ name, avatar, metDate: metDate ? new Date(metDate).toISOString() : undefined });
   };
 
   const handleJoin = () => {
@@ -99,6 +100,18 @@ export default function Home() {
                       onChange={(e) => setName(e.target.value)}
                     />
                   </div>
+
+                  {mode === "create" && (
+                    <div className="space-y-3">
+                      <label className="text-sm font-semibold ml-1">When did you first meet? (Optional)</label>
+                      <Input 
+                        type="date"
+                        className="h-12 text-lg rounded-xl border-2 focus-visible:ring-primary/20"
+                        value={metDate}
+                        onChange={(e) => setMetDate(e.target.value)}
+                      />
+                    </div>
+                  )}
 
                   {mode === "join" && (
                     <div className="space-y-3">

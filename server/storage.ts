@@ -13,6 +13,7 @@ export interface IStorage {
   createRoom(code: string): Promise<Room>;
   getRoomByCode(code: string): Promise<Room | undefined>;
   updateRoomPhase(id: number, phase: string, round: number): Promise<Room>;
+  updateRoomMetDate(id: number, metDate: Date): Promise<Room>;
 
   // Players
   createPlayer(roomId: number, name: string, avatar: string): Promise<Player>;
@@ -43,6 +44,14 @@ export class DatabaseStorage implements IStorage {
   async updateRoomPhase(id: number, phase: string, round: number): Promise<Room> {
     const [room] = await db.update(rooms)
       .set({ phase, round })
+      .where(eq(rooms.id, id))
+      .returning();
+    return room;
+  }
+
+  async updateRoomMetDate(id: number, metDate: Date): Promise<Room> {
+    const [room] = await db.update(rooms)
+      .set({ metDate })
       .where(eq(rooms.id, id))
       .returning();
     return room;

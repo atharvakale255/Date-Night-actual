@@ -75,8 +75,11 @@ export default function SummaryPhase({ players, responses }: SummaryProps) {
          ))}
       </div>
 
-      <Button className="w-full mt-auto" onClick={() => window.location.href = '/'}>
-        Play Again
+      <Button 
+        className="w-full mt-auto" 
+        onClick={() => window.location.href = `/room/${room.code}`}
+      >
+        Back to Dashboard
       </Button>
     </div>
   );

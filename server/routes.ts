@@ -47,6 +47,9 @@ export async function registerRoutes(
       const { name, avatar } = api.rooms.create.input.parse(req.body);
       const code = Math.random().toString(36).substring(2, 6).toUpperCase();
       const room = await storage.createRoom(code);
+      if (req.body.metDate) {
+        await storage.updateRoomMetDate(room.id, new Date(req.body.metDate));
+      }
       const player = await storage.createPlayer(room.id, name, avatar || "🙂");
       res.status(201).json({ roomCode: code, playerId: player.id, roomId: room.id });
     } catch (err) {
@@ -84,31 +87,11 @@ export async function registerRoutes(
   // Next Phase (Advance Game)
   app.post(api.rooms.nextPhase.path, async (req, res) => {
     const code = req.params.code;
+    const { phase, round } = req.body;
     const room = await storage.getRoomByCode(code);
     if (!room) return res.status(404).json({ message: "Room not found" });
 
-    // Simple logic to cycle phases
-    // Lobby -> Quiz -> This_That -> Likely -> Dare -> Summary
-    // For MVP we just rotate phases or increment rounds. 
-    // Let's implement a simple flow:
-    // 0: Lobby
-    // 1-3: Quiz
-    // 4-6: This/That
-    // 7-9: Likely
-    // 10-12: Dare
-    // 13: Summary
-
-    let nextRound = room.round + 1;
-    let nextPhase = "quiz";
-
-    if (nextRound === 0) nextPhase = "lobby";
-    else if (nextRound <= 3) nextPhase = "quiz";
-    else if (nextRound <= 6) nextPhase = "this_that";
-    else if (nextRound <= 9) nextPhase = "likely";
-    else if (nextRound <= 12) nextPhase = "dare";
-    else nextPhase = "summary";
-
-    const updatedRoom = await storage.updateRoomPhase(room.id, nextPhase, nextRound);
+    const updatedRoom = await storage.updateRoomPhase(room.id, phase || "dashboard", round || 0);
     res.json(updatedRoom);
   });
 
