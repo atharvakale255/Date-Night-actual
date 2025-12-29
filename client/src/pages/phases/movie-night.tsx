@@ -20,6 +20,7 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
   const [queueOpen, setQueueOpen] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastUpdateRef = useRef(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const { data: queue = [], refetch: refetchQueue } = useQuery({
     queryKey: ["/api/queue", room.id],
@@ -159,18 +160,25 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
       </div>
 
       <Card className="flex-1 flex flex-col gap-4 p-4 min-h-0">
-        <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
+        <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden flex flex-col items-center justify-center">
           {currentVideo ? (
-            <video
-              ref={videoRef}
-              key={currentVideo.id}
-              controls
-              className="w-full h-full"
-              data-testid="video-player"
-            >
-              <source src={currentVideo.url} type="video/mp4" />
-              Your browser does not support HTML5 video.
-            </video>
+            <div className="w-full h-full flex flex-col">
+              <video
+                ref={videoRef}
+                key={currentVideo.id}
+                controls
+                className="w-full h-full"
+                data-testid="video-player"
+                onError={() => setLoadError("Unable to play this URL. Use direct video links (MP4, WebM, OGG)")}
+                onLoadStart={() => setLoadError(null)}
+              >
+                <source src={currentVideo.url} type="video/mp4" />
+                Your browser does not support HTML5 video.
+              </video>
+              {loadError && (
+                <p className="text-xs text-red-300 text-center p-2 bg-slate-800">{loadError}</p>
+              )}
+            </div>
           ) : (
             <div className="text-slate-400 text-center">
               <Film className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -179,17 +187,20 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
           )}
         </div>
 
-        <form onSubmit={handleAddToQueue} className="flex gap-2 shrink-0">
-          <Input
-            placeholder="Paste video URL here..."
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            data-testid="input-video-url"
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" className="shrink-0" data-testid="button-add-queue">
-            <Plus className="w-4 h-4" />
-          </Button>
+        <form onSubmit={handleAddToQueue} className="flex flex-col gap-2 shrink-0">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Paste video URL (MP4, WebM, OGG)..."
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              data-testid="input-video-url"
+              className="flex-1"
+            />
+            <Button type="submit" size="icon" className="shrink-0" data-testid="button-add-queue">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Need a URL? Try: direct MP4 links, YouTube (with youtube-dl), or video hosting sites</p>
         </form>
 
         <button

@@ -20,6 +20,7 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
   const [queueOpen, setQueueOpen] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const lastUpdateRef = useRef(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const { data: queue = [], refetch: refetchQueue } = useQuery({
     queryKey: ["/api/queue", room.id],
@@ -169,16 +170,23 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
                 <p className="text-white font-semibold text-lg">{currentSong.title}</p>
                 <p className="text-purple-100 text-sm">Added by {currentSong.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
               </div>
-              <audio
-                ref={audioRef}
-                key={currentSong.id}
-                controls
-                className="w-full max-w-xs"
-                data-testid="audio-player"
-              >
-                <source src={currentSong.url} type="audio/mpeg" />
-                Your browser does not support HTML5 audio.
-              </audio>
+              <div className="space-y-3">
+                <audio
+                  ref={audioRef}
+                  key={currentSong.id}
+                  controls
+                  className="w-full max-w-xs"
+                  data-testid="audio-player"
+                  onError={() => setLoadError("Unable to play this URL. Use direct audio links (MP3, OGG, WAV)")}
+                  onLoadStart={() => setLoadError(null)}
+                >
+                  <source src={currentSong.url} type="audio/mpeg" />
+                  Your browser does not support HTML5 audio.
+                </audio>
+                {loadError && (
+                  <p className="text-xs text-red-300 text-center">{loadError}</p>
+                )}
+              </div>
             </>
           ) : (
             <div className="text-purple-100 text-center">
@@ -190,17 +198,20 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
           )}
         </div>
 
-        <form onSubmit={handleAddToQueue} className="flex gap-2 shrink-0">
-          <Input
-            placeholder="Paste music/song URL..."
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            data-testid="input-music-url"
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" className="shrink-0" data-testid="button-add-queue">
-            <Plus className="w-4 h-4" />
-          </Button>
+        <form onSubmit={handleAddToQueue} className="flex flex-col gap-2 shrink-0">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Paste music URL (MP3, OGG, WAV)..."
+              value={newUrl}
+              onChange={(e) => setNewUrl(e.target.value)}
+              data-testid="input-music-url"
+              className="flex-1"
+            />
+            <Button type="submit" size="icon" className="shrink-0" data-testid="button-add-queue">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Need a URL? Try: direct MP3 links, SoundCloud, or audio hosting sites (Spotify links don't work)</p>
         </form>
 
         <button
