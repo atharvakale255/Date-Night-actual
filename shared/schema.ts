@@ -56,6 +56,15 @@ export const chatMessages = pgTable("chat_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const playbackState = pgTable("playback_state", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull(),
+  currentTime: text("current_time").default("0"),
+  isPlaying: text("is_playing").default("false"),
+  queueItemId: integer("queue_item_id"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
 // === RELATIONS ===
 export const roomsRelations = relations(rooms, ({ many }) => ({
   players: many(players),
@@ -115,6 +124,7 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({ id: tru
 export const insertResponseSchema = createInsertSchema(responses).omit({ id: true });
 export const insertQueueItemSchema = createInsertSchema(queueItems).omit({ id: true, createdAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
+export const insertPlaybackStateSchema = createInsertSchema(playbackState).omit({ id: true, lastUpdated: true });
 
 // === TYPES ===
 

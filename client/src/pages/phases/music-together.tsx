@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
   const [newUrl, setNewUrl] = useState("");
   const [message, setMessage] = useState("");
   const [queueOpen, setQueueOpen] = useState(true);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const lastUpdateRef = useRef(0);
 
   const { data: queue = [], refetch: refetchQueue } = useQuery({
     queryKey: ["/api/queue", room.id],
@@ -103,6 +105,40 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
 
   const currentSong = queue[0];
 
+  useEffect(() => {
+    const syncInterval = setInterval(async () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      const now = Date.now();
+      if (now - lastUpdateRef.current > 500) {
+        await fetch(`/api/playback/${room.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentTime: audio.currentTime,
+            isPlaying: !audio.paused,
+            queueItemId: currentSong?.id,
+          }),
+        });
+        lastUpdateRef.current = now;
+      }
+
+      const res = await fetch(`/api/playback/${room.id}`);
+      const state = await res.json();
+      if (state && Math.abs(audio.currentTime - parseFloat(state.currentTime)) > 1) {
+        audio.currentTime = parseFloat(state.currentTime);
+      }
+      if (state?.isPlaying === "true" && audio.paused) {
+        audio.play();
+      } else if (state?.isPlaying === "false" && !audio.paused) {
+        audio.pause();
+      }
+    }, 500);
+
+    return () => clearInterval(syncInterval);
+  }, [room.id, currentSong?.id]);
+
   return (
     <div className="flex flex-col h-full w-full gap-4 p-4">
       <div className="flex items-center justify-between shrink-0">
@@ -134,12 +170,13 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
                 <p className="text-purple-100 text-sm">Added by {currentSong.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
               </div>
               <audio
+                ref={audioRef}
                 key={currentSong.id}
                 controls
                 className="w-full max-w-xs"
                 data-testid="audio-player"
               >
-                <source src={currentSong.url} />
+                <source src={currentSong.url} type="audio/mpeg" />
                 Your browser does not support HTML5 audio.
               </audio>
             </>

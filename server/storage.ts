@@ -1,6 +1,6 @@
 import { db } from "./db";
 import {
-  rooms, players, questions, responses, queueItems, chatMessages,
+  rooms, players, questions, responses, queueItems, chatMessages, playbackState,
   type Room, type Player, type Question, type Response, type QueueItem, type ChatMessage,
   type CreateRoomRequest, type JoinRoomRequest,
   insertRoomSchema, insertPlayerSchema, insertResponseSchema,
@@ -37,6 +37,10 @@ export interface IStorage {
   // Chat Messages
   createChatMessage(message: any): Promise<ChatMessage>;
   getChatMessagesByRoomId(roomId: number): Promise<ChatMessage[]>;
+
+  // Playback State
+  getPlaybackState(roomId: number): Promise<any | undefined>;
+  updatePlaybackState(roomId: number, data: any): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -123,6 +127,25 @@ export class DatabaseStorage implements IStorage {
 
   async getChatMessagesByRoomId(roomId: number): Promise<ChatMessage[]> {
     return await db.select().from(chatMessages).where(eq(chatMessages.roomId, roomId));
+  }
+
+  async getPlaybackState(roomId: number): Promise<any | undefined> {
+    const [state] = await db.select().from(playbackState).where(eq(playbackState.roomId, roomId));
+    return state;
+  }
+
+  async updatePlaybackState(roomId: number, data: any): Promise<any> {
+    const existing = await this.getPlaybackState(roomId);
+    if (existing) {
+      const [updated] = await db.update(playbackState)
+        .set(data)
+        .where(eq(playbackState.roomId, roomId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(playbackState).values({ roomId, ...data }).returning();
+      return created;
+    }
   }
 }
 

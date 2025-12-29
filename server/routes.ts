@@ -176,5 +176,31 @@ export async function registerRoutes(
     }
   });
 
+  // Playback State
+  app.get("/api/playback/:roomId", async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const state = await storage.getPlaybackState(roomId);
+      res.json(state || { currentTime: "0", isPlaying: "false" });
+    } catch (err) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
+  app.post("/api/playback/:roomId", async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const { currentTime, isPlaying, queueItemId } = req.body;
+      const state = await storage.updatePlaybackState(roomId, {
+        currentTime: String(currentTime),
+        isPlaying: String(isPlaying),
+        queueItemId: queueItemId || null,
+      });
+      res.json(state);
+    } catch (err) {
+      res.status(400).json({ message: "Invalid request" });
+    }
+  });
+
   return httpServer;
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
   const [newUrl, setNewUrl] = useState("");
   const [message, setMessage] = useState("");
   const [queueOpen, setQueueOpen] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const lastUpdateRef = useRef(0);
 
   const { data: queue = [], refetch: refetchQueue } = useQuery({
     queryKey: ["/api/queue", room.id],
@@ -103,6 +105,40 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
 
   const currentVideo = queue[0];
 
+  useEffect(() => {
+    const syncInterval = setInterval(async () => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const now = Date.now();
+      if (now - lastUpdateRef.current > 500) {
+        await fetch(`/api/playback/${room.id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentTime: video.currentTime,
+            isPlaying: !video.paused,
+            queueItemId: currentVideo?.id,
+          }),
+        });
+        lastUpdateRef.current = now;
+      }
+
+      const res = await fetch(`/api/playback/${room.id}`);
+      const state = await res.json();
+      if (state && Math.abs(video.currentTime - parseFloat(state.currentTime)) > 1) {
+        video.currentTime = parseFloat(state.currentTime);
+      }
+      if (state?.isPlaying === "true" && video.paused) {
+        video.play();
+      } else if (state?.isPlaying === "false" && !video.paused) {
+        video.pause();
+      }
+    }, 500);
+
+    return () => clearInterval(syncInterval);
+  }, [room.id, currentVideo?.id]);
+
   return (
     <div className="flex flex-col h-full w-full gap-4 p-4">
       <div className="flex items-center justify-between shrink-0">
@@ -126,12 +162,13 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
         <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center">
           {currentVideo ? (
             <video
+              ref={videoRef}
               key={currentVideo.id}
               controls
               className="w-full h-full"
               data-testid="video-player"
             >
-              <source src={currentVideo.url} />
+              <source src={currentVideo.url} type="video/mp4" />
               Your browser does not support HTML5 video.
             </video>
           ) : (
