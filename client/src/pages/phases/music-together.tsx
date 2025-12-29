@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNextPhase } from "@/hooks/use-game";
 import { Music, ArrowLeft, Trash2, Plus, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { detectMediaType } from "@/lib/media-utils";
 
 export default function MusicTogetherPhase({ room, players, currentPlayer, otherPlayer }: { 
   room: any, 
@@ -171,21 +172,50 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
                 <p className="text-purple-100 text-sm">Added by {currentSong.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}</p>
               </div>
               <div className="space-y-3">
-                <audio
-                  ref={audioRef}
-                  key={currentSong.id}
-                  controls
-                  className="w-full max-w-xs"
-                  data-testid="audio-player"
-                  onError={() => setLoadError("Unable to play this URL. Use direct audio links (MP3, OGG, WAV)")}
-                  onLoadStart={() => setLoadError(null)}
-                >
-                  <source src={currentSong.url} type="audio/mpeg" />
-                  Your browser does not support HTML5 audio.
-                </audio>
-                {loadError && (
-                  <p className="text-xs text-red-300 text-center">{loadError}</p>
-                )}
+                {(() => {
+                  const media = detectMediaType(currentSong.url);
+                  return (
+                    <>
+                      {media.type === 'spotify' && media.embedUrl ? (
+                        <iframe
+                          src={media.embedUrl}
+                          width="100%"
+                          height="152"
+                          frameBorder="0"
+                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                          loading="lazy"
+                          data-testid="spotify-player"
+                        />
+                      ) : media.type === 'youtube' && media.embedUrl ? (
+                        <iframe
+                          src={media.embedUrl}
+                          width="100%"
+                          height="315"
+                          frameBorder="0"
+                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                          loading="lazy"
+                          data-testid="youtube-player"
+                        />
+                      ) : (
+                        <audio
+                          ref={audioRef}
+                          key={currentSong.id}
+                          controls
+                          className="w-full max-w-xs"
+                          data-testid="audio-player"
+                          onError={() => setLoadError("Unable to play this URL. Supported: Spotify, YouTube, or direct audio links (MP3, OGG, WAV)")}
+                          onLoadStart={() => setLoadError(null)}
+                        >
+                          <source src={currentSong.url} type="audio/mpeg" />
+                          Your browser does not support HTML5 audio.
+                        </audio>
+                      )}
+                      {loadError && (
+                        <p className="text-xs text-red-300 text-center">{loadError}</p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </>
           ) : (
@@ -201,7 +231,7 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
         <form onSubmit={handleAddToQueue} className="flex flex-col gap-2 shrink-0">
           <div className="flex gap-2">
             <Input
-              placeholder="Paste music URL (MP3, OGG, WAV)..."
+              placeholder="Paste music URL (Spotify, YouTube, or direct MP3/OGG/WAV)..."
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
               data-testid="input-music-url"
@@ -211,7 +241,7 @@ export default function MusicTogetherPhase({ room, players, currentPlayer, other
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Need a URL? Try: direct MP3 links, SoundCloud, or audio hosting sites (Spotify links don't work)</p>
+          <p className="text-xs text-muted-foreground">Paste: Spotify track/album link, YouTube link, or direct MP3 URL</p>
         </form>
 
         <button

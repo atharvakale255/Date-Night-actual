@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNextPhase } from "@/hooks/use-game";
 import { Film, ArrowLeft, Trash2, Plus, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { detectMediaType } from "@/lib/media-utils";
 
 export default function MovieNightPhase({ room, players, currentPlayer, otherPlayer }: { 
   room: any, 
@@ -160,24 +161,43 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
       </div>
 
       <Card className="flex-1 flex flex-col gap-4 p-4 min-h-0">
-        <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden flex flex-col items-center justify-center">
+        <div className="w-full bg-slate-900 rounded-lg overflow-hidden flex flex-col items-center justify-center" style={{ aspectRatio: '16/9' }}>
           {currentVideo ? (
             <div className="w-full h-full flex flex-col">
-              <video
-                ref={videoRef}
-                key={currentVideo.id}
-                controls
-                className="w-full h-full"
-                data-testid="video-player"
-                onError={() => setLoadError("Unable to play this URL. Use direct video links (MP4, WebM, OGG)")}
-                onLoadStart={() => setLoadError(null)}
-              >
-                <source src={currentVideo.url} type="video/mp4" />
-                Your browser does not support HTML5 video.
-              </video>
-              {loadError && (
-                <p className="text-xs text-red-300 text-center p-2 bg-slate-800">{loadError}</p>
-              )}
+              {(() => {
+                const media = detectMediaType(currentVideo.url);
+                return (
+                  <>
+                    {media.type === 'youtube' && media.embedUrl ? (
+                      <iframe
+                        src={media.embedUrl}
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        data-testid="youtube-video-player"
+                      />
+                    ) : (
+                      <video
+                        ref={videoRef}
+                        key={currentVideo.id}
+                        controls
+                        className="w-full h-full"
+                        data-testid="video-player"
+                        onError={() => setLoadError("Unable to play this URL. Use YouTube or direct video links (MP4, WebM, OGG)")}
+                        onLoadStart={() => setLoadError(null)}
+                      >
+                        <source src={currentVideo.url} type="video/mp4" />
+                        Your browser does not support HTML5 video.
+                      </video>
+                    )}
+                    {loadError && (
+                      <p className="text-xs text-red-300 text-center p-2 bg-slate-800">{loadError}</p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           ) : (
             <div className="text-slate-400 text-center">
@@ -190,7 +210,7 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
         <form onSubmit={handleAddToQueue} className="flex flex-col gap-2 shrink-0">
           <div className="flex gap-2">
             <Input
-              placeholder="Paste video URL (MP4, WebM, OGG)..."
+              placeholder="Paste video URL (YouTube or direct MP4/WebM/OGG)..."
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
               data-testid="input-video-url"
@@ -200,7 +220,7 @@ export default function MovieNightPhase({ room, players, currentPlayer, otherPla
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">Need a URL? Try: direct MP4 links, YouTube (with youtube-dl), or video hosting sites</p>
+          <p className="text-xs text-muted-foreground">Paste: YouTube link or direct MP4 URL</p>
         </form>
 
         <button
