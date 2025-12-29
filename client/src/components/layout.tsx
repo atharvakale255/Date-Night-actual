@@ -41,7 +41,7 @@ export function Card({ children, className, ...props }: React.HTMLAttributes<HTM
         "glass-card rounded-3xl p-6 relative overflow-hidden",
         className
       )}
-      {...props}
+      {...props as any}
     >
       {children}
     </motion.div>

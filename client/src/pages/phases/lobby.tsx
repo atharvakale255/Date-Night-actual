@@ -66,7 +66,7 @@ export default function LobbyPhase({ room, players, currentPlayer }: LobbyProps)
           <Button 
             className="w-full text-lg h-14 shadow-xl shadow-primary/25" 
             disabled={!canStart || nextPhase.isPending}
-            onClick={() => nextPhase.mutate(room.code)}
+            onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard", round: 0 })}
           >
             {nextPhase.isPending ? "Starting..." : "Start Game"} <Play className="ml-2 w-5 h-5 fill-current" />
           </Button>

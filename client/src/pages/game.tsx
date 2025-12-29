@@ -10,15 +10,15 @@ import canvasConfetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 
 // Phase Components
-import DashboardPhase from "./phases/dashboard";
+import DashboardPhase from "./phases/dashboard.tsx";
 import LobbyPhase from "./phases/lobby";
 import QuizPhase from "./phases/quiz";
 import ThisThatPhase from "./phases/this-that";
 import LikelyPhase from "./phases/likely";
 import DarePhase from "./phases/dare";
 import SummaryPhase from "./phases/summary";
-import MovieNightPhase from "./phases/movie-night";
-import MusicTogetherPhase from "./phases/music-together";
+import MovieNightPhase from "./phases/movie-night.tsx";
+import MusicTogetherPhase from "./phases/music-together.tsx";
 
 export default function Game() {
   const [, params] = useRoute("/room/:code");
