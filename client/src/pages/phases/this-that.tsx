@@ -5,7 +5,7 @@ import { useSubmitResponse, useNextPhase } from "@/hooks/use-game";
 import type { Room, Player, Question, Response } from "@shared/schema";
 import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
-import { Check, Zap } from "lucide-react";
+import { ArrowLeft, Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ThisThatProps {
@@ -20,7 +20,10 @@ interface ThisThatProps {
 export default function ThisThatPhase({ room, players, questions, responses, currentPlayer, otherPlayer }: ThisThatProps) {
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
-  const currentQ = questions[room.round];
+  
+  // Filtering for this_that questions specifically to avoid index issues
+  const ttQuestions = questions.filter(q => q.category === 'this_that');
+  const currentQ = ttQuestions[(room.round - 1) % ttQuestions.length];
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
@@ -38,9 +41,17 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="text-center pt-4">
-        <h2 className="text-xl font-bold text-secondary uppercase tracking-widest flex items-center justify-center gap-2">
-          <Zap className="fill-current w-5 h-5" /> Speed Round
+      <div className="flex items-center justify-between px-2 pt-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2 text-secondary"
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Button>
+        <h2 className="text-sm font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
+          <Zap className="fill-current w-4 h-4" /> Speed Round
         </h2>
       </div>
 

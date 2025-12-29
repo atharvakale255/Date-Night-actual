@@ -6,6 +6,7 @@ import type { Room, Player, Question, Response } from "@shared/schema";
 import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
+import { ArrowLeft } from "lucide-react";
 
 interface LikelyProps {
   room: Room;
@@ -19,7 +20,10 @@ interface LikelyProps {
 export default function LikelyPhase({ room, players, questions, responses, currentPlayer, otherPlayer }: LikelyProps) {
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
-  const currentQ = questions[room.round];
+  
+  // Filtering for likely questions specifically to avoid index issues
+  const likelyQuestions = questions.filter(q => q.category === 'likely');
+  const currentQ = likelyQuestions[(room.round - 1) % likelyQuestions.length];
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
@@ -35,7 +39,15 @@ export default function LikelyPhase({ room, players, questions, responses, curre
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="text-center py-2">
+      <div className="flex items-center justify-between px-2 pt-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2"
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Button>
         <h2 className="text-sm font-bold text-accent uppercase tracking-widest">Who is more likely to...</h2>
       </div>
 

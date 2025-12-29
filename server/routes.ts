@@ -3,7 +3,9 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertResponseSchema } from "@shared/schema";
+import { insertResponseSchema, responses } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import { db } from "./db";
 
 // Seed data
 const SEED_QUESTIONS = [
@@ -99,6 +101,22 @@ export async function registerRoutes(
   app.post(api.responses.submit.path, async (req, res) => {
     try {
       const input = insertResponseSchema.parse(req.body);
+      
+      // Handle special question IDs for video/music sync (global per room)
+      if (input.questionId < 0) {
+        const existing = await storage.getResponsesByRoomId(input.roomId);
+        const special = existing.find(r => r.questionId === input.questionId);
+        
+        if (special) {
+          // Update existing special response instead of creating new one
+          const [updated] = await db.update(responses)
+            .set({ answer: input.answer })
+            .where(eq(responses.id, special.id))
+            .returning();
+          return res.status(200).json(updated);
+        }
+      }
+
       const response = await storage.createResponse(input);
       res.status(201).json(response);
     } catch (err) {

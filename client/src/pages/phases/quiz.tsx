@@ -5,7 +5,7 @@ import { useSubmitResponse, useNextPhase } from "@/hooks/use-game";
 import type { Room, Player, Question, Response } from "@shared/schema";
 import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface QuizProps {
@@ -21,11 +21,9 @@ export default function QuizPhase({ room, players, questions, responses, current
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
   
-  // Current question is based on the round index
-  // questions array contains ALL questions for session. round 0 -> index 0.
-  // Note: room.round starts at 1 usually in real apps, but let's assume 0-indexed or mapped correctly.
-  // Schema defaults round to 0.
-  const currentQ = questions[room.round];
+  // Filtering for quiz questions specifically to avoid index issues
+  const quizQuestions = questions.filter(q => q.category === 'quiz');
+  const currentQ = quizQuestions[(room.round - 1) % quizQuestions.length];
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
@@ -50,9 +48,19 @@ export default function QuizPhase({ room, players, questions, responses, current
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <div className="flex items-center justify-between px-2">
-        <span className="font-bold text-primary tracking-widest text-sm uppercase">Round {room.round + 1}</span>
-        <span className="text-xs bg-white/50 px-2 py-1 rounded-md text-muted-foreground">Quiz</span>
+      <div className="flex items-center justify-between px-2 pt-2">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2"
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Button>
+        <div className="flex flex-col items-end">
+          <span className="font-bold text-primary tracking-widest text-xs uppercase">Round {room.round}</span>
+          <span className="text-[10px] bg-white/50 px-2 py-0.5 rounded-md text-muted-foreground uppercase">Quiz</span>
+        </div>
       </div>
 
       <Card className="bg-gradient-to-br from-white to-pink-50/50 border-pink-100 shadow-pink-100/50 min-h-[160px] flex items-center justify-center text-center p-6">

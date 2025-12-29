@@ -1,7 +1,7 @@
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { useNextPhase } from "@/hooks/use-game";
-import { Zap, CheckCircle } from "lucide-react";
+import { Zap, CheckCircle, ArrowLeft } from "lucide-react";
 import type { Room, Player, Question } from "@shared/schema";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -15,30 +15,35 @@ interface DareProps {
 }
 
 export default function DarePhase({ room, questions, currentPlayer }: DareProps) {
-  const { mutate: nextPhase } = useNextPhase(room.code);
+  const nextPhase = useNextPhase();
   const [completed, setCompleted] = useState(false);
 
   // Get dare questions (category = 'dare')
   const dareQuestions = questions.filter(q => q.category === 'dare');
   
   // Get current dare based on round
-  const dareIndex = (room.round - 10) % dareQuestions.length;
-  const currentDare = dareQuestions[dareIndex] || {
-    id: 0,
-    category: 'dare',
-    text: 'Share a fun moment from your date!',
-    options: []
-  };
+  const dareIndex = (room.round - 1) % dareQuestions.length;
+  const currentDare = dareQuestions[dareIndex] || dareQuestions[0];
 
   const handleComplete = () => {
     setCompleted(true);
     setTimeout(() => {
-      nextPhase();
+      nextPhase.mutate({ code: room.code, round: room.round + 1 });
     }, 1500);
   };
 
   return (
-    <div className="h-full flex flex-col items-center justify-center gap-6 py-8 px-4">
+    <div className="h-full flex flex-col items-center gap-6 py-4 px-4">
+      <div className="w-full flex justify-start">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2"
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Button>
+      </div>
       <motion.div
         initial={{ scale: 0, rotate: -10 }}
         animate={{ scale: 1, rotate: 0 }}
