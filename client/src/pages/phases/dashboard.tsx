@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { useNextPhase } from "@/hooks/use-game";
-import { Film, Music, Heart, Brain, Zap, Users, HelpCircle } from "lucide-react";
+import { Film, Music, Heart, Brain, Zap, Users, HelpCircle, Gift } from "lucide-react";
 import { differenceInDays, formatDistanceToNow } from "date-fns";
+import { PicksModal } from "@/components/picks-modal";
+import { useQuery } from "@tanstack/react-query";
 
 interface DashboardProps {
   room: any;
@@ -14,6 +17,21 @@ interface DashboardProps {
 
 export default function DashboardPhase({ room, players, currentPlayer, otherPlayer }: DashboardProps) {
   const nextPhase = useNextPhase();
+  const [isPicksOpen, setIsPicksOpen] = useState(false);
+  const [currentPick, setCurrentPick] = useState<any>(null);
+
+  const { data: pick, isFetching } = useQuery({
+    queryKey: ['/api/picks/random', isPicksOpen],
+    enabled: false,
+    staleTime: 0,
+  });
+
+  const handlePickClick = async () => {
+    const response = await fetch('/api/picks/random');
+    const data = await response.json();
+    setCurrentPick(data);
+    setIsPicksOpen(true);
+  };
 
   const daysTogether = room.metDate 
     ? differenceInDays(new Date(), new Date(room.metDate))
@@ -62,12 +80,26 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
       </motion.div>
 
       <div className="grid grid-cols-1 gap-4">
-        <h4 className="text-lg font-semibold px-2">Choose an Activity</h4>
+        <div className="flex items-center justify-between px-2">
+          <h4 className="text-lg font-semibold">Choose an Activity</h4>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={handlePickClick}
+            disabled={isFetching}
+            data-testid="button-pick-for-you"
+          >
+            <Gift className="w-4 h-4" />
+            I Picked This
+          </Button>
+        </div>
         {activities.map((activity, idx) => (
           <Card 
             key={activity.id}
             className="p-4 flex items-center gap-4 cursor-pointer hover:scale-[1.02] transition-transform active:scale-[0.98]"
             onClick={() => nextPhase.mutate({ code: room.code, phase: activity.id, round: 1 })}
+            data-testid={`card-activity-${activity.id}`}
           >
             <div className={`p-3 rounded-2xl ${activity.color} text-white`}>
               <activity.icon className="w-6 h-6" />
@@ -79,6 +111,13 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
           </Card>
         ))}
       </div>
+
+      <PicksModal 
+        isOpen={isPicksOpen} 
+        onClose={() => setIsPicksOpen(false)} 
+        pick={currentPick}
+        isLoading={isFetching}
+      />
     </div>
   );
 }

@@ -65,6 +65,12 @@ export const playbackState = pgTable("playback_state", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+export const picks = pgTable("picks", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // "song", "message", "question", "dateIdea"
+  content: text("content").notNull(),
+});
+
 // === RELATIONS ===
 export const roomsRelations = relations(rooms, ({ many }) => ({
   players: many(players),
@@ -125,6 +131,7 @@ export const insertResponseSchema = createInsertSchema(responses).omit({ id: tru
 export const insertQueueItemSchema = createInsertSchema(queueItems).omit({ id: true, createdAt: true });
 export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({ id: true, createdAt: true });
 export const insertPlaybackStateSchema = createInsertSchema(playbackState).omit({ id: true, lastUpdated: true });
+export const insertPickSchema = createInsertSchema(picks).omit({ id: true });
 
 // === TYPES ===
 
@@ -134,6 +141,7 @@ export type Question = typeof questions.$inferSelect;
 export type Response = typeof responses.$inferSelect;
 export type QueueItem = typeof queueItems.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type Pick = typeof picks.$inferSelect;
 
 export type CreateRoomRequest = { name: string; avatar?: string; metDate?: string };
 export type JoinRoomRequest = { code: string; name: string; avatar?: string };

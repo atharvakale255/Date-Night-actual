@@ -1,10 +1,10 @@
 import { db } from "./db";
 import {
-  rooms, players, questions, responses, queueItems, chatMessages, playbackState,
-  type Room, type Player, type Question, type Response, type QueueItem, type ChatMessage,
+  rooms, players, questions, responses, queueItems, chatMessages, playbackState, picks,
+  type Room, type Player, type Question, type Response, type QueueItem, type ChatMessage, type Pick,
   type CreateRoomRequest, type JoinRoomRequest,
   insertRoomSchema, insertPlayerSchema, insertResponseSchema,
-  insertQuestionSchema, insertQueueItemSchema, insertChatMessageSchema
+  insertQuestionSchema, insertQueueItemSchema, insertChatMessageSchema, insertPickSchema
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
@@ -41,6 +41,11 @@ export interface IStorage {
   // Playback State
   getPlaybackState(roomId: number): Promise<any | undefined>;
   updatePlaybackState(roomId: number, data: any): Promise<any>;
+
+  // Picks
+  getAllPicks(): Promise<Pick[]>;
+  getRandomPick(): Promise<Pick | undefined>;
+  seedPicks(data: any[]): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -146,6 +151,20 @@ export class DatabaseStorage implements IStorage {
       const [created] = await db.insert(playbackState).values({ roomId, ...data }).returning();
       return created;
     }
+  }
+
+  async getAllPicks(): Promise<Pick[]> {
+    return await db.select().from(picks);
+  }
+
+  async getRandomPick(): Promise<Pick | undefined> {
+    const allPicks = await this.getAllPicks();
+    if (allPicks.length === 0) return undefined;
+    return allPicks[Math.floor(Math.random() * allPicks.length)];
+  }
+
+  async seedPicks(data: any[]): Promise<void> {
+    await db.insert(picks).values(data);
   }
 }
 

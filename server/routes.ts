@@ -38,10 +38,43 @@ const SEED_QUESTIONS = [
   { category: "would_you_rather", text: "Would you rather always have to sing or always have to dance?", options: ["Sing", "Dance"] },
 ];
 
+// Seed data for picks
+const SEED_PICKS = [
+  // Songs
+  { type: "song", content: "Your favorite song - let's listen together" },
+  { type: "song", content: "A song that reminds me of you" },
+  { type: "song", content: "This song makes me think of us" },
+  
+  // Messages
+  { type: "message", content: "I love how you make me smile without even trying" },
+  { type: "message", content: "Thank you for being my person" },
+  { type: "message", content: "Missing you already" },
+  { type: "message", content: "You make long distance feel like nothing" },
+  { type: "message", content: "Can't wait to see your face again" },
+  
+  // Questions
+  { type: "question", content: "What's something new you've learned about yourself recently?" },
+  { type: "question", content: "What's your favorite memory with me?" },
+  { type: "question", content: "What do you love most about us?" },
+  { type: "question", content: "What's something you've been wanting to talk about?" },
+  
+  // Date Ideas
+  { type: "dateIdea", content: "Virtual dinner date - cook the same meal together" },
+  { type: "dateIdea", content: "Movie night - watch together with video call" },
+  { type: "dateIdea", content: "Breakfast in bed video call (yes, really!)" },
+  { type: "dateIdea", content: "Karaoke duet night" },
+  { type: "dateIdea", content: "Cook-off competition - make the same dish" },
+];
+
 async function seed() {
   const existing = await storage.getAllQuestions();
   if (existing.length === 0) {
     await storage.seedQuestions(SEED_QUESTIONS);
+  }
+  
+  const existingPicks = await storage.getAllPicks();
+  if (existingPicks.length === 0) {
+    await storage.seedPicks(SEED_PICKS);
   }
 }
 
@@ -92,6 +125,12 @@ export async function registerRoutes(
     const questions = await storage.getAllQuestions();
 
     res.json({ room, players, questions, responses });
+  });
+
+  // Get Random Pick
+  app.get(api.picks.random.path, async (req, res) => {
+    const pick = await storage.getRandomPick();
+    res.json(pick);
   });
 
   // Next Phase (Advance Game)

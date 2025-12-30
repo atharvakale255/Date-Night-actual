@@ -67,6 +67,18 @@ export const api = {
         400: errorSchemas.validation,
       },
     }
+  },
+  picks: {
+    random: {
+      method: 'GET' as const,
+      path: '/api/picks/random',
+      responses: {
+        200: z.object({
+          type: z.string(),
+          content: z.string(),
+        }).optional(),
+      },
+    }
   }
 };
 
