@@ -10,9 +10,11 @@ import { db } from "./db";
 // Seed data
 const SEED_QUESTIONS = [
   // Quiz
-  { category: "quiz", text: "What is my ideal dream vacation?", options: ["Beach resort", "Mountain cabin", "City exploration", "Staycation"] },
-  { category: "quiz", text: "What food could I eat every day?", options: ["Pizza", "Sushi", "Tacos", "Pasta"] },
+  { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
+  { category: "quiz", text: "What food could I eat every day?", options: ["Pizza", "Paneer", "Momo", "Pasta"] },
   { category: "quiz", text: "What's my biggest pet peeve?", options: ["Loud chewing", "Being late", "Slow internet", "Messy rooms"] },
+  { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
+  { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
   
   // This or That
   { category: "this_that", text: "Morning person or Night owl?", options: ["Morning", "Night"] },
