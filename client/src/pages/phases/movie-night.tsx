@@ -23,7 +23,6 @@ export default function MovieNightPhase({
   const { toast } = useToast();
   const nextPhase = useNextPhase();
   const [newUrl, setNewUrl] = useState("");
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [watch2GetherUrl, setWatch2GetherUrl] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
 
@@ -77,14 +76,10 @@ export default function MovieNightPhase({
 
   const currentVideo = queue[0];
 
-  const handleSelectVideo = (url: string) => {
-    setSelectedVideo(url);
-  };
-
   const handleStartWatching = () => {
-    if (!selectedVideo) return;
+    if (!currentVideo) return;
 
-    const youtubeId = extractYouTubeId(selectedVideo);
+    const youtubeId = extractYouTubeId(currentVideo.url);
     if (!youtubeId) {
       toast({ title: "Error", description: "Invalid YouTube URL" });
       return;
@@ -110,7 +105,6 @@ export default function MovieNightPhase({
             size="sm"
             className="gap-2"
             onClick={() => {
-              setSelectedVideo(null);
               nextPhase.mutate({ code: room.code, phase: "dashboard" });
             }}
             data-testid="button-back"
@@ -200,18 +194,9 @@ export default function MovieNightPhase({
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {queue.map((item: any) => (
-                  <button
+                  <div
                     key={item.id}
-                    onClick={() => handleSelectVideo(item.url)}
-                    className="w-full p-3 rounded-lg border-2 transition-all hover-elevate"
-                    style={{
-                      borderColor:
-                        selectedVideo === item.url ? "rgb(59, 130, 246)" : "transparent",
-                      backgroundColor:
-                        selectedVideo === item.url
-                          ? "rgba(59, 130, 246, 0.1)"
-                          : "var(--background)",
-                    }}
+                    className="w-full p-3 rounded-lg bg-slate-100 dark:bg-slate-800"
                     data-testid={`queue-item-${item.id}`}
                   >
                     <div className="flex items-center justify-between">
@@ -221,25 +206,29 @@ export default function MovieNightPhase({
                           Added by {item.addedBy === currentPlayer.id ? "You" : otherPlayer?.name}
                         </p>
                       </div>
-                      {selectedVideo === item.url && (
-                        <span className="ml-2 text-blue-600 font-bold text-sm">✓</span>
+                      {item.id === currentVideo?.id && (
+                        <span className="ml-2 text-blue-600 font-bold text-sm">Now Playing</span>
                       )}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
           {/* Ready Button */}
-          {selectedVideo && (
+          {currentVideo && (
             <Button
-              onClick={() => setSelectedVideo(selectedVideo)}
+              onClick={() => {
+                setIsStarting(true);
+                handleStartWatching();
+              }}
               className="w-full gap-2 mt-auto"
-              data-testid="button-ready"
+              data-testid="button-ready-to-watch"
+              disabled={isStarting}
             >
               <ExternalLink className="w-4 h-4" />
-              Ready to Watch
+              {isStarting ? "Opening Watch Room..." : "Ready to Watch"}
             </Button>
           )}
         </div>
