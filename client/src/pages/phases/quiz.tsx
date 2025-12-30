@@ -132,10 +132,10 @@ export default function QuizPhase({ room, players, questions, responses, current
           {isCreator && (
             <Button 
               className="w-full" 
-              onClick={() => nextPhase.mutate({ code: room.code })}
+              onClick={() => nextPhase.mutate({ code: room.code, phase: "quiz", round: room.round + 1 })}
               disabled={nextPhase.isPending}
             >
-              Next Round
+              Next Question
             </Button>
           )}
           {!isCreator && <p className="text-center text-sm text-muted-foreground animate-pulse">Waiting for host...</p>}
