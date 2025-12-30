@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { useNextPhase } from "@/hooks/use-game";
-import { Film, Music, Heart, Brain, Zap, Users } from "lucide-react";
+import { Film, Music, Heart, Brain, Zap, Users, HelpCircle } from "lucide-react";
 import { differenceInDays, formatDistanceToNow } from "date-fns";
 
 interface DashboardProps {
@@ -23,6 +23,7 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
     { id: 'quiz', title: 'Couples Quiz', icon: Brain, color: 'bg-pink-500', description: 'Test how well you know each other' },
     { id: 'movie_night', title: 'Movie Night', icon: Film, color: 'bg-blue-500', description: 'Pick and watch together' },
     { id: 'music_together', title: 'Music Together', icon: Music, color: 'bg-purple-500', description: 'Share your favorite songs' },
+    { id: 'would_you_rather', title: 'Would You Rather', icon: HelpCircle, color: 'bg-rose-500', description: 'Fun choice game' },
     { id: 'this_that', title: 'This or That', icon: Zap, color: 'bg-yellow-500', description: 'Quick choices' },
     { id: 'likely', title: 'Most Likely To', icon: Users, color: 'bg-green-500', description: 'Who would do it?' },
   ];

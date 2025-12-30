@@ -19,6 +19,7 @@ import DarePhase from "./phases/dare";
 import SummaryPhase from "./phases/summary";
 import MovieNightPhase from "./phases/movie-night.tsx";
 import MusicTogetherPhase from "./phases/music-together.tsx";
+import WouldYouRatherPhase from "./phases/would-you-rather";
 
 export default function Game() {
   const [, params] = useRoute("/room/:code");
@@ -61,6 +62,7 @@ export default function Game() {
     case 'this_that': PhaseComponent = ThisThatPhase; break;
     case 'likely': PhaseComponent = LikelyPhase; break;
     case 'dare': PhaseComponent = DarePhase; break;
+    case 'would_you_rather': PhaseComponent = WouldYouRatherPhase; break;
     case 'summary': PhaseComponent = SummaryPhase; break;
     case 'movie_night': PhaseComponent = MovieNightPhase; break;
     case 'music_together': PhaseComponent = MusicTogetherPhase; break;

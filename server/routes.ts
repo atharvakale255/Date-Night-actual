@@ -28,6 +28,14 @@ const SEED_QUESTIONS = [
   { category: "dare", text: "Stare contest! Don't blink for 30 seconds.", options: [] },
   { category: "dare", text: "Give your partner a sincere compliment.", options: [] },
   { category: "dare", text: "Do your best impression of your partner.", options: [] },
+
+  // Would You Rather
+  { category: "would_you_rather", text: "Would you rather have the ability to fly or be invisible?", options: ["Fly", "Invisible"] },
+  { category: "would_you_rather", text: "Would you rather always be 10 minutes late or 20 minutes early?", options: ["10 min late", "20 min early"] },
+  { category: "would_you_rather", text: "Would you rather explore space or the ocean?", options: ["Space", "Ocean"] },
+  { category: "would_you_rather", text: "Would you rather have the perfect job or perfect relationship?", options: ["Perfect job", "Perfect relationship"] },
+  { category: "would_you_rather", text: "Would you rather go back to the past or forward to the future?", options: ["Past", "Future"] },
+  { category: "would_you_rather", text: "Would you rather always have to sing or always have to dance?", options: ["Sing", "Dance"] },
 ];
 
 async function seed() {
