@@ -75,7 +75,7 @@ export default function SummaryPhase({ room, players, responses, questions }: Su
           {[...Array(5)].map((_, i) => (
              <Star 
                key={i} 
-               className={`w-6 h-6 \${i < Math.floor(finalScore / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} 
+               className={i < Math.floor(finalScore / 20) ? "w-6 h-6 fill-yellow-400 text-yellow-400" : "w-6 h-6 text-gray-200"} 
              />
           ))}
         </div>
@@ -117,7 +117,7 @@ export default function SummaryPhase({ room, players, responses, questions }: Su
       <Button 
         size="lg"
         className="w-full mt-4 rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate"
-        onClick={() => window.location.href = `/room/\${room.code}`}
+        onClick={() => window.location.href = `/room/${room.code}`}
       >
         Play Again
       </Button>
