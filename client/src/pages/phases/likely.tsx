@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { useSound } from "@/hooks/use-sound";
 
 interface LikelyProps {
   room: Room;
@@ -42,7 +43,7 @@ export default function LikelyPhase({ room, players, questions, responses, curre
   useEffect(() => {
     if (bothAnswered) {
       if (myResponse?.answer === partnerResponse?.answer) {
-        playSound('match');
+        playSound('win');
         canvasConfetti({
           particleCount: 80,
           spread: 60,

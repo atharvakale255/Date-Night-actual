@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
 import { Check, Loader2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSound } from "@/hooks/use-sound";
 
 interface QuizProps {
   room: Room;
@@ -43,7 +44,7 @@ export default function QuizPhase({ room, players, questions, responses, current
   useEffect(() => {
     if (bothAnswered) {
       if (myResponse?.answer === partnerResponse?.answer) {
-        playSound('match');
+        playSound('win');
         canvasConfetti({
           particleCount: 100,
           spread: 70,

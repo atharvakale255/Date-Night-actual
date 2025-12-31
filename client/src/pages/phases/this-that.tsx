@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import canvasConfetti from "canvas-confetti";
 import { ArrowLeft, Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSound } from "@/hooks/use-sound";
 
 interface ThisThatProps {
   room: Room;
@@ -42,7 +43,7 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
   useEffect(() => {
     if (bothAnswered) {
       if (myResponse?.answer === partnerResponse?.answer) {
-        playSound('match');
+        playSound('win');
         canvasConfetti({ particleCount: 50, spread: 60, colors: ['#FFD700', '#FFA500'] });
       } else {
         playSound('pop');
