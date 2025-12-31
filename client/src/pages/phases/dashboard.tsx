@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, useAnimation } from "framer-motion";
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { useNextPhase } from "@/hooks/use-game";
-import { Film, Music, Heart, Brain, Zap, Users, HelpCircle, Gift } from "lucide-react";
-import { differenceInDays, formatDistanceToNow } from "date-fns";
+import { Film, Music, Heart, Brain, Zap, Users, HelpCircle, Gift, Loader2 } from "lucide-react";
+import { differenceInDays } from "date-fns";
 import { PicksModal } from "@/components/picks-modal";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,6 +19,37 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
   const nextPhase = useNextPhase();
   const [isPicksOpen, setIsPicksOpen] = useState(false);
   const [currentPick, setCurrentPick] = useState<any>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const controls = useAnimation();
+
+  const activities = [
+    { id: 'quiz', title: 'Couples Quiz', icon: Brain, color: 'bg-pink-500', description: 'Test how well you know each other' },
+    { id: 'would_you_rather', title: 'Would You Rather', icon: HelpCircle, color: 'bg-rose-500', description: 'Fun choice game' },
+    { id: 'this_that', title: 'This or That', icon: Zap, color: 'bg-yellow-500', description: 'Quick choices' },
+    { id: 'likely', title: 'Most Likely To', icon: Users, color: 'bg-green-500', description: 'Who would do it?' },
+    { id: 'movie_night', title: 'Movie Night', icon: Film, color: 'bg-blue-500', description: 'Pick and watch together' },
+    { id: 'music_together', title: 'Music Together', icon: Music, color: 'bg-purple-500', description: 'Share your favorite songs' },
+  ];
+
+  const handleSpin = async () => {
+    if (isSpinning) return;
+    setIsSpinning(true);
+
+    const randomIndex = Math.floor(Math.random() * activities.length);
+    const selected = activities[randomIndex];
+
+    // Animation: spin 5 times then stop at index
+    const totalSpin = 360 * 5 + (360 / activities.length) * randomIndex;
+
+    await controls.start({
+      rotate: totalSpin,
+      transition: { duration: 3, ease: "circOut" }
+    });
+
+    setTimeout(() => {
+      nextPhase.mutate({ code: room.code, phase: selected.id, round: 1 });
+    }, 500);
+  };
 
   const { data: pick, isFetching } = useQuery({
     queryKey: ['/api/picks/random', isPicksOpen],
@@ -36,15 +67,6 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
   const daysTogether = room.metDate 
     ? differenceInDays(new Date(), new Date(room.metDate))
     : null;
-
-  const activities = [
-    { id: 'quiz', title: 'Couples Quiz', icon: Brain, color: 'bg-pink-500', description: 'Test how well you know each other' },
-    { id: 'movie_night', title: 'Movie Night', icon: Film, color: 'bg-blue-500', description: 'Pick and watch together' },
-    { id: 'music_together', title: 'Music Together', icon: Music, color: 'bg-purple-500', description: 'Share your favorite songs' },
-    { id: 'would_you_rather', title: 'Would You Rather', icon: HelpCircle, color: 'bg-rose-500', description: 'Fun choice game' },
-    { id: 'this_that', title: 'This or That', icon: Zap, color: 'bg-yellow-500', description: 'Quick choices' },
-    { id: 'likely', title: 'Most Likely To', icon: Users, color: 'bg-green-500', description: 'Who would do it?' },
-  ];
 
   return (
     <div className="space-y-8 py-4">
@@ -79,9 +101,45 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
         )}
       </motion.div>
 
+      {/* Spin the Wheel Section */}
+      <div className="flex flex-col items-center gap-6 p-8 bg-gradient-to-br from-pink-50 to-purple-50 rounded-3xl border-2 border-dashed border-pink-200">
+        <div className="relative w-48 h-48">
+          {/* Arrow indicator */}
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-pink-500" />
+          
+          <motion.div 
+            animate={controls}
+            className="w-full h-full rounded-full border-8 border-white shadow-2xl relative overflow-hidden bg-white"
+          >
+            {activities.map((act, i) => (
+              <div 
+                key={act.id}
+                className={`absolute top-0 left-0 w-full h-full origin-center`}
+                style={{ 
+                  transform: `rotate(${(360 / activities.length) * i}deg)`,
+                  clipPath: 'polygon(50% 50%, 50% 0, 100% 0, 100% 50%)'
+                }}
+              >
+                <div className={`w-full h-full ${act.color} opacity-80`} />
+              </div>
+            ))}
+          </motion.div>
+        </div>
+        
+        <Button 
+          size="lg" 
+          className="rounded-full px-12 py-6 text-xl font-bold shadow-xl hover-elevate"
+          onClick={handleSpin}
+          disabled={isSpinning}
+        >
+          {isSpinning ? <Loader2 className="animate-spin mr-2" /> : "Spin the Wheel!"}
+        </Button>
+        <p className="text-sm text-muted-foreground text-center">Let fate decide your next activity!</p>
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
         <div className="flex items-center justify-between px-2">
-          <h4 className="text-lg font-semibold">Choose an Activity</h4>
+          <h4 className="text-lg font-semibold">Manual Choice</h4>
           <Button
             variant="outline"
             size="sm"
