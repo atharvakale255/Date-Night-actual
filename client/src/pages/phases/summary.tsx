@@ -1,6 +1,6 @@
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Trophy, Star, Sparkles } from "lucide-react";
+import { Trophy, Star } from "lucide-react";
 import type { Room, Player, Question, Response } from "@shared/schema";
 import { motion } from "framer-motion";
 
@@ -13,73 +13,113 @@ interface SummaryProps {
   otherPlayer?: Player;
 }
 
-export default function SummaryPhase({ room, players, responses }: SummaryProps) {
-  // Simple match calculation
-  // Group responses by questionId
-  const questionIds = Array.from(new Set(responses.map(r => r.questionId)));
-  let matches = 0;
-  let total = 0;
+export default function SummaryPhase({ room, players, responses, questions }: SummaryProps) {
+  const getCompatibility = (category: string, questionIds: number[]) => {
+    if (!questionIds || questionIds.length === 0) return null;
+    const catResponses = responses.filter(r => questionIds.includes(r.questionId));
+    let matches = 0;
+    let total = 0;
 
-  questionIds.forEach(qId => {
-    const res = responses.filter(r => r.questionId === qId);
-    if (res.length === 2) {
-      if (res[0].answer === res[1].answer) matches++;
-      total++;
-    }
-  });
+    questionIds.forEach(qId => {
+      const qRes = catResponses.filter(r => r.questionId === qId);
+      if (qRes.length === 2) {
+        if (qRes[0].answer === qRes[1].answer) matches++;
+        total++;
+      }
+    });
+    return total > 0 ? Math.round((matches / total) * 100) : 0;
+  };
 
-  const percentage = total > 0 ? Math.round((matches / total) * 100) : 0;
+  const quizScore = getCompatibility('quiz', (room.quizQuestions as number[]) || []);
+  const ttScore = getCompatibility('this_that', (room.thisThatQuestions as number[]) || []);
+  const likelyScore = getCompatibility('likely', (room.likelyQuestions as number[]) || []);
+
+  const scores = [quizScore, ttScore, likelyScore].filter(s => s !== null) as number[];
+  const finalScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   
   let vibe = "Getting to know each other! 🌱";
-  if (percentage > 50) vibe = "Solid Connection! 🤞";
-  if (percentage > 80) vibe = "Soulmates?! 🔥";
+  let message = "You're off to a great start! Keep exploring each other's worlds.";
+  
+  if (finalScore > 50) {
+    vibe = "Solid Connection! 🤞";
+    message = "You two are really in sync! There's a beautiful bond growing here.";
+  }
+  if (finalScore > 80) {
+    vibe = "Soulmates?! 🔥";
+    message = "Wow! Your connection is absolutely electric. You truly understand each other's hearts.";
+  }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center gap-6 py-8">
+    <div className="h-full flex flex-col items-center justify-center gap-6 py-8 px-4 overflow-y-auto">
       <motion.div 
         initial={{ scale: 0 }} 
         animate={{ scale: 1 }} 
         transition={{ type: "spring", bounce: 0.5 }}
       >
-        <div className="w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/50 mb-4 mx-auto">
+        <div className="w-24 h-24 bg-gradient-to-tr from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/30 mb-4 mx-auto">
           <Trophy className="w-12 h-12 text-white" />
         </div>
       </motion.div>
 
       <div className="text-center space-y-2">
-        <h2 className="text-4xl font-display font-bold">Game Over!</h2>
-        <p className="text-xl text-muted-foreground">{vibe}</p>
+        <h2 className="text-4xl font-display font-bold text-primary">Relationship Result</h2>
+        <p className="text-xl text-muted-foreground font-medium">{vibe}</p>
       </div>
 
-      <Card className="w-full py-8 px-4 flex flex-col items-center gap-4 bg-gradient-to-b from-white to-pink-50">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Match Score</h3>
-        <div className="text-6xl font-black text-primary font-mono tracking-tighter">
-          {percentage}%
+      <Card className="w-full py-8 px-4 flex flex-col items-center gap-4 bg-gradient-to-b from-white to-pink-50/50 border-pink-100 shadow-xl shadow-pink-100/20">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-primary/60">Overall Compatibility</h3>
+        <div className="text-7xl font-black text-primary font-mono tracking-tighter">
+          {finalScore}%
         </div>
         <div className="flex gap-1">
           {[...Array(5)].map((_, i) => (
              <Star 
                key={i} 
-               className={`w-6 h-6 ${i < Math.floor(percentage / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} 
+               className={`w-6 h-6 \${i < Math.floor(finalScore / 20) ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}`} 
              />
           ))}
         </div>
+        <p className="text-center text-muted-foreground italic px-4 mt-2">
+          "{message}"
+        </p>
       </Card>
       
+      <div className="w-full space-y-3">
+        {quizScore !== null && (
+          <div className="flex justify-between items-center bg-white/50 p-3 rounded-2xl border border-pink-50">
+            <span className="font-bold text-sm text-muted-foreground">Quiz Match</span>
+            <span className="font-mono font-bold text-primary">{quizScore}%</span>
+          </div>
+        )}
+        {ttScore !== null && (
+          <div className="flex justify-between items-center bg-white/50 p-3 rounded-2xl border border-pink-50">
+            <span className="font-bold text-sm text-muted-foreground">This or That</span>
+            <span className="font-mono font-bold text-primary">{ttScore}%</span>
+          </div>
+        )}
+        {likelyScore !== null && (
+          <div className="flex justify-between items-center bg-white/50 p-3 rounded-2xl border border-pink-50">
+            <span className="font-bold text-sm text-muted-foreground">Likely To</span>
+            <span className="font-mono font-bold text-primary">{likelyScore}%</span>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4 w-full">
          {players.map(p => (
-            <div key={p.id} className="text-center">
-               <div className="text-4xl mb-2">{p.avatar}</div>
-               <div className="font-bold">{p.name}</div>
+            <div key={p.id} className="text-center p-3 rounded-2xl bg-white/30 border border-white/50 shadow-sm">
+               <div className="text-4xl mb-2 drop-shadow-sm">{p.avatar}</div>
+               <div className="font-bold text-sm">{p.name}</div>
             </div>
          ))}
       </div>
 
       <Button 
-        className="w-full mt-auto" 
-        onClick={() => window.location.href = `/room/${room.code}`}
+        size="lg"
+        className="w-full mt-4 rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate"
+        onClick={() => window.location.href = `/room/\${room.code}`}
       >
-        Back to Dashboard
+        Play Again
       </Button>
     </div>
   );

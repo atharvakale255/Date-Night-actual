@@ -20,15 +20,40 @@ interface LikelyProps {
 export default function LikelyPhase({ room, players, questions, responses, currentPlayer, otherPlayer }: LikelyProps) {
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
+  const { playSound } = useSound();
   
-  // Filtering for likely questions specifically to avoid index issues
-  const likelyQuestions = questions.filter(q => q.category === 'likely');
+  const roomQuestionIds = (room.likelyQuestions as number[]) || [];
+  const likelyQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
   const currentQ = likelyQuestions[(room.round - 1) % likelyQuestions.length];
+
+  const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
+  const matches = roomQuestionIds.filter(id => {
+    const qResponses = allResponses.filter(r => r.questionId === id);
+    return qResponses.length === 2 && qResponses[0].answer === qResponses[1].answer;
+  }).length;
+  
+  const compatibility = roomQuestionIds.length > 0 ? Math.round((matches / roomQuestionIds.length) * 100) : 0;
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
   const bothAnswered = !!myResponse && !!partnerResponse;
   const isCreator = players[0]?.id === currentPlayer.id;
+
+  useEffect(() => {
+    if (bothAnswered) {
+      if (myResponse?.answer === partnerResponse?.answer) {
+        playSound('match');
+        canvasConfetti({
+          particleCount: 80,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: ['#FF69B4', '#00CED1']
+        });
+      } else {
+        playSound('pop');
+      }
+    }
+  }, [bothAnswered, myResponse, partnerResponse, playSound]);
 
   if (!currentQ || !otherPlayer) return (
     <div className="flex flex-col h-full items-center justify-center p-8 text-center gap-4">
@@ -37,13 +62,24 @@ export default function LikelyPhase({ room, players, questions, responses, curre
     </div>
   );
 
-  // Options are actually the players themselves for "Who's more likely"
-  // But we store IDs as strings in answer usually, or names. Let's use IDs.
-  const voteSelf = () => submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: String(currentPlayer.id) });
-  const votePartner = () => submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: String(otherPlayer.id) });
+  const voteSelf = () => {
+    playSound('click');
+    submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: String(currentPlayer.id) });
+  };
+  const votePartner = () => {
+    playSound('click');
+    submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: String(otherPlayer.id) });
+  };
+
+  const isLastQuestion = room.round >= roomQuestionIds.length;
 
   const nextQuestion = () => {
-    nextPhase.mutate({ code: room.code, phase: "likely", round: room.round + 1 });
+    playSound('click');
+    if (isLastQuestion) {
+      nextPhase.mutate({ code: room.code, phase: "summary", round: 1 });
+    } else {
+      nextPhase.mutate({ code: room.code, phase: "likely", round: room.round + 1 });
+    }
   };
 
   return (
@@ -57,7 +93,10 @@ export default function LikelyPhase({ room, players, questions, responses, curre
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-        <h2 className="text-xs font-bold text-accent uppercase tracking-widest opacity-70">Who is more likely to...</h2>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold text-accent uppercase tracking-widest opacity-70">Round {room.round} / {roomQuestionIds.length}</span>
+          <span className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-full font-bold">Match: {compatibility}%</span>
+        </div>
       </div>
 
       <Card className="min-h-[160px] flex items-center justify-center text-center p-8 bg-gradient-to-br from-accent/5 to-transparent border-accent/20">
@@ -148,7 +187,7 @@ export default function LikelyPhase({ room, players, questions, responses, curre
                size="lg"
                className="w-full rounded-2xl h-16 text-xl font-bold bg-gradient-to-r from-primary to-accent hover-elevate shadow-xl"
              >
-               Next Question
+               {isLastQuestion ? "Finish Game" : "Next Question"}
              </Button>
           ) : (
              <Card className="p-4 bg-white/30 text-center border-dashed">

@@ -20,10 +20,19 @@ interface QuizProps {
 export default function QuizPhase({ room, players, questions, responses, currentPlayer, otherPlayer }: QuizProps) {
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
+  const { playSound } = useSound();
   
-  // Filtering for quiz questions specifically to avoid index issues
-  const quizQuestions = questions.filter(q => q.category === 'quiz');
+  const roomQuestionIds = (room.quizQuestions as number[]) || [];
+  const quizQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
   const currentQ = quizQuestions[(room.round - 1) % quizQuestions.length];
+
+  const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
+  const matches = roomQuestionIds.filter(id => {
+    const qResponses = allResponses.filter(r => r.questionId === id);
+    return qResponses.length === 2 && qResponses[0].answer === qResponses[1].answer;
+  }).length;
+  
+  const compatibility = roomQuestionIds.length > 0 ? Math.round((matches / roomQuestionIds.length) * 100) : 0;
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
@@ -32,19 +41,26 @@ export default function QuizPhase({ room, players, questions, responses, current
   const isCreator = players[0]?.id === currentPlayer.id;
 
   useEffect(() => {
-    if (bothAnswered && myResponse.answer === partnerResponse.answer) {
-      canvasConfetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#FF69B4', '#00CED1', '#9370DB']
-      });
+    if (bothAnswered) {
+      if (myResponse?.answer === partnerResponse?.answer) {
+        playSound('match');
+        canvasConfetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FF69B4', '#00CED1', '#9370DB']
+        });
+      } else {
+        playSound('pop');
+      }
     }
-  }, [bothAnswered, myResponse, partnerResponse]);
+  }, [bothAnswered, myResponse, partnerResponse, playSound]);
 
   if (!currentQ) return <div className="text-center p-10">No questions loaded!</div>;
 
   const options = (currentQ.options as string[]) || [];
+
+  const isLastQuestion = room.round >= roomQuestionIds.length;
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -58,8 +74,8 @@ export default function QuizPhase({ room, players, questions, responses, current
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
         <div className="flex flex-col items-end">
-          <span className="font-bold text-primary tracking-widest text-xs uppercase">Round {room.round}</span>
-          <span className="text-[10px] bg-white/50 px-2 py-0.5 rounded-md text-muted-foreground uppercase">Quiz</span>
+          <span className="font-bold text-primary tracking-widest text-xs uppercase">Round {room.round} / {roomQuestionIds.length}</span>
+          <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Match: {compatibility}%</span>
         </div>
       </div>
 
@@ -132,10 +148,17 @@ export default function QuizPhase({ room, players, questions, responses, current
           {isCreator && (
             <Button 
               className="w-full" 
-              onClick={() => nextPhase.mutate({ code: room.code, phase: "quiz", round: room.round + 1 })}
+              onClick={() => {
+                playSound('click');
+                if (isLastQuestion) {
+                  nextPhase.mutate({ code: room.code, phase: "summary", round: 1 });
+                } else {
+                  nextPhase.mutate({ code: room.code, phase: "quiz", round: room.round + 1 });
+                }
+              }}
               disabled={nextPhase.isPending}
             >
-              Next Question
+              {isLastQuestion ? "Finish Quiz" : "Next Question"}
             </Button>
           )}
           {!isCreator && <p className="text-center text-sm text-muted-foreground animate-pulse">Waiting for host...</p>}

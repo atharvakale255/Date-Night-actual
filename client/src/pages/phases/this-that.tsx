@@ -20,10 +20,19 @@ interface ThisThatProps {
 export default function ThisThatPhase({ room, players, questions, responses, currentPlayer, otherPlayer }: ThisThatProps) {
   const submit = useSubmitResponse();
   const nextPhase = useNextPhase();
+  const { playSound } = useSound();
   
-  // Filtering for this_that questions specifically to avoid index issues
-  const ttQuestions = questions.filter(q => q.category === 'this_that');
+  const roomQuestionIds = (room.thisThatQuestions as number[]) || [];
+  const ttQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
   const currentQ = ttQuestions[(room.round - 1) % ttQuestions.length];
+
+  const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
+  const matches = roomQuestionIds.filter(id => {
+    const qResponses = allResponses.filter(r => r.questionId === id);
+    return qResponses.length === 2 && qResponses[0].answer === qResponses[1].answer;
+  }).length;
+  
+  const compatibility = roomQuestionIds.length > 0 ? Math.round((matches / roomQuestionIds.length) * 100) : 0;
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);
@@ -31,13 +40,20 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
   const isCreator = players[0]?.id === currentPlayer.id;
 
   useEffect(() => {
-    if (bothAnswered && myResponse.answer === partnerResponse.answer) {
-      canvasConfetti({ particleCount: 50, spread: 60, colors: ['#FFD700', '#FFA500'] });
+    if (bothAnswered) {
+      if (myResponse?.answer === partnerResponse?.answer) {
+        playSound('match');
+        canvasConfetti({ particleCount: 50, spread: 60, colors: ['#FFD700', '#FFA500'] });
+      } else {
+        playSound('pop');
+      }
     }
-  }, [bothAnswered, myResponse, partnerResponse]);
+  }, [bothAnswered, myResponse, partnerResponse, playSound]);
 
   if (!currentQ) return <div>Loading...</div>;
   const options = (currentQ.options as string[]) || ["Option A", "Option B"];
+
+  const isLastQuestion = room.round >= roomQuestionIds.length;
 
   return (
     <div className="flex flex-col h-full gap-6">
@@ -45,14 +61,18 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
         <Button 
           variant="ghost" 
           size="sm" 
-          className="gap-2 text-secondary"
-          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard" })}
+          className="gap-2 text-secondary no-default-hover-elevate"
+          onClick={() => {
+            playSound('click');
+            nextPhase.mutate({ code: room.code, phase: "dashboard", round: 1 });
+          }}
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-        <h2 className="text-sm font-bold text-secondary uppercase tracking-widest flex items-center gap-2">
-          <Zap className="fill-current w-4 h-4" /> Speed Round
-        </h2>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest opacity-70">Round {room.round} / {roomQuestionIds.length}</span>
+          <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold">Match: {compatibility}%</span>
+        </div>
       </div>
 
       <div className="flex-1 grid grid-rows-2 gap-4">
@@ -66,7 +86,10 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
               key={idx}
               whileTap={{ scale: 0.98 }}
               disabled={!!myResponse}
-              onClick={() => submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: option })}
+              onClick={() => {
+                playSound('click');
+                submit.mutate({ roomId: room.id, questionId: currentQ.id, answer: option });
+              }}
               className={cn(
                 "relative rounded-3xl text-3xl font-display font-bold p-6 shadow-xl transition-all flex items-center justify-center text-center",
                 idx === 0 
@@ -102,7 +125,14 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
             <Button 
               size="lg" 
               className="w-full"
-              onClick={() => nextPhase.mutate(room.code)}
+              onClick={() => {
+                playSound('click');
+                if (isLastQuestion) {
+                  nextPhase.mutate({ code: room.code, phase: "summary", round: 1 });
+                } else {
+                  nextPhase.mutate({ code: room.code, phase: "this_that", round: room.round + 1 });
+                }
+              }}
               disabled={nextPhase.isPending}
             >
               Next Question

@@ -50,7 +50,24 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async createRoom(code: string): Promise<Room> {
-    const [room] = await db.insert(rooms).values({ code, phase: "lobby", round: 0 }).returning();
+    const allQuestions = await this.getAllQuestions();
+    const getRandomQuestions = (category: string) => {
+      const filtered = allQuestions.filter(q => q.category === category);
+      return filtered.sort(() => 0.5 - Math.random()).slice(0, 10).map(q => q.id);
+    };
+
+    const quizIds = getRandomQuestions('quiz');
+    const thisThatIds = getRandomQuestions('this_that');
+    const likelyIds = getRandomQuestions('likely');
+
+    const [room] = await db.insert(rooms).values({ 
+      code, 
+      phase: "lobby", 
+      round: 0,
+      quizQuestions: quizIds,
+      thisThatQuestions: thisThatIds,
+      likelyQuestions: likelyIds
+    }).returning();
     return room;
   }
 

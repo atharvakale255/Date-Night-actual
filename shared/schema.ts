@@ -11,6 +11,9 @@ export const rooms = pgTable("rooms", {
   phase: text("phase").notNull().default("dashboard"), // dashboard, quiz, this_that, likely, dare, summary, movie_night, music_together
   round: integer("round").notNull().default(0),
   metDate: timestamp("met_date"),
+  quizQuestions: jsonb("quiz_questions"), // Array of 10 question IDs
+  thisThatQuestions: jsonb("this_that_questions"), // Array of 10 question IDs
+  likelyQuestions: jsonb("likely_questions"), // Array of 10 question IDs
   createdAt: timestamp("created_at").defaultNow(),
 });
 
