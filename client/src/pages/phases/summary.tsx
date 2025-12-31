@@ -1,8 +1,10 @@
 import { Card } from "@/components/layout";
 import { Button } from "@/components/ui/button";
-import { Trophy, Star } from "lucide-react";
+import { Trophy, Star, Home } from "lucide-react";
 import type { Room, Player, Question, Response } from "@shared/schema";
 import { motion } from "framer-motion";
+import { useNextPhase } from "@/hooks/use-game";
+import { useLocation } from "wouter";
 
 interface SummaryProps {
   room: Room;
@@ -14,6 +16,8 @@ interface SummaryProps {
 }
 
 export default function SummaryPhase({ room, players, responses, questions }: SummaryProps) {
+  const nextPhase = useNextPhase();
+  const [, setLocation] = useLocation();
   const getCompatibility = (category: string, questionIds: number[]) => {
     if (!questionIds || questionIds.length === 0) return null;
     const catResponses = responses.filter(r => questionIds.includes(r.questionId));
@@ -114,13 +118,28 @@ export default function SummaryPhase({ room, players, responses, questions }: Su
          ))}
       </div>
 
-      <Button 
-        size="lg"
-        className="w-full mt-4 rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate"
-        onClick={() => window.location.href = `/room/${room.code}`}
-      >
-        Play Again
-      </Button>
+      <div className="w-full space-y-3">
+        <Button 
+          size="lg"
+          className="w-full rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate bg-gradient-to-r from-primary to-purple-500 border-none"
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard", round: 1 })}
+          disabled={nextPhase.isPending}
+          data-testid="button-play-again"
+        >
+          {nextPhase.isPending ? "Loading..." : "Play Again"}
+        </Button>
+
+        <Button 
+          variant="outline"
+          size="lg"
+          className="w-full rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate"
+          onClick={() => setLocation("/")}
+          data-testid="button-main-menu"
+        >
+          <Home className="w-5 h-5 mr-2" />
+          Back to Main Menu
+        </Button>
+      </div>
     </div>
   );
 }
