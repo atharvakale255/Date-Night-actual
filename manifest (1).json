@@ -1,0 +1,27 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "hadesxz.netlify",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "hadesxz.netlify",
+  "start_url": "https://hadesxz.netlify.app",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "https://hadesxz.netlify.app/favicon.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "isSquare": true,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 128,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ],
+  "lang": "en"
+}
