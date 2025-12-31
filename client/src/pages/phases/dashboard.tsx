@@ -61,7 +61,16 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
   const handlePickClick = async () => {
     const response = await fetch('/api/picks/random');
     const data = await response.json();
-    setCurrentPick(data);
+    
+    // Check if we should inject the special rose message
+    if (Math.random() > 0.5) {
+      setCurrentPick({
+        type: "message",
+        content: "🌹 A special rose for you... Thank you for being the most incredible partner. You make every day bloom with happiness! 🌹"
+      });
+    } else {
+      setCurrentPick(data);
+    }
     setIsPicksOpen(true);
   };
 
