@@ -136,14 +136,22 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
                   clipPath: 'polygon(50% 50%, 50% 0, 100% 0, 100% 50%)'
                 }}
               >
-                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 flex items-center justify-center p-4`}>
-                   {/* Mini Icons on wheel */}
+                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 flex items-center justify-center p-4 relative`}>
+                   <div 
+                     className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+                     style={{ transform: `rotate(${(360 / activities.length) / 2}deg)` }}
+                   >
+                     <act.icon className="w-5 h-5 text-white/90 drop-shadow-sm" />
+                     <span className="text-[8px] font-black text-white/90 uppercase tracking-tighter whitespace-nowrap drop-shadow-sm">
+                       {act.title.split(' ')[0]}
+                     </span>
+                   </div>
                 </div>
               </div>
             ))}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-full shadow-lg z-30 flex items-center justify-center">
-                 <Heart className="w-6 h-6 text-primary fill-primary" />
+              <div className="w-12 h-12 bg-white rounded-full shadow-lg z-30 flex items-center justify-center border-4 border-pink-50">
+                 <Heart className="w-6 h-6 text-primary fill-primary animate-pulse" />
               </div>
             </div>
           </motion.div>
