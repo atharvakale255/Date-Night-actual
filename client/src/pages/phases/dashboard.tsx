@@ -73,43 +73,59 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-center space-y-4"
+        className="text-center space-y-6"
       >
-        <div className="flex justify-center -space-x-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center border-4 border-background text-2xl">
+        <div className="flex justify-center -space-x-4 mb-6 relative">
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: -5 }}
+            className="w-20 h-20 rounded-full bg-primary flex items-center justify-center border-4 border-white shadow-xl text-3xl z-10 animate-float"
+          >
             {currentPlayer.avatar}
-          </div>
+          </motion.div>
           {otherPlayer ? (
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center border-4 border-background text-2xl">
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center border-4 border-white shadow-xl text-3xl animate-float [animation-delay:1s]"
+            >
               {otherPlayer.avatar}
-            </div>
+            </motion.div>
           ) : (
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-4 border-background text-sm italic">
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-4 border-white shadow-inner text-sm italic text-muted-foreground">
               Wait
             </div>
           )}
+          <div className="absolute inset-0 bg-primary/5 blur-3xl -z-10 rounded-full" />
         </div>
         
         {daysTogether !== null && (
-          <div className="bg-white/50 backdrop-blur-sm p-6 rounded-3xl border border-white/20 shadow-xl">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Days Together</h3>
-            <div className="text-5xl font-bold text-primary my-2">{daysTogether}</div>
-            <p className="text-sm text-muted-foreground">
+          <Card className="p-8 bg-gradient-to-br from-white/90 to-pink-50/50">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Days Together</h3>
+            <motion.div 
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", bounce: 0.6 }}
+              className="text-6xl font-bold text-primary drop-shadow-sm"
+            >
+              {daysTogether}
+            </motion.div>
+            <p className="text-xs font-medium text-muted-foreground mt-2 bg-pink-100/50 px-3 py-1 rounded-full inline-block">
               Since {new Date(room.metDate).toLocaleDateString()}
             </p>
-          </div>
+          </Card>
         )}
       </motion.div>
 
       {/* Spin the Wheel Section */}
-      <div className="flex flex-col items-center gap-6 p-8 bg-gradient-to-br from-pink-50 to-purple-50 rounded-3xl border-2 border-dashed border-pink-200">
-        <div className="relative w-48 h-48">
+      <Card className="p-10 flex flex-col items-center gap-8 bg-gradient-to-br from-white/80 to-purple-50/50 border-purple-100/50 shadow-purple-500/10">
+        <div className="relative w-56 h-56">
           {/* Arrow indicator */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-pink-500" />
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-primary filter drop-shadow-md" />
+          
+          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full -z-10 animate-pulse" />
           
           <motion.div 
             animate={controls}
-            className="w-full h-full rounded-full border-8 border-white shadow-2xl relative overflow-hidden bg-white"
+            className="w-full h-full rounded-full border-[10px] border-white shadow-[0_0_40px_rgba(0,0,0,0.1)] relative overflow-hidden bg-white"
           >
             {activities.map((act, i) => (
               <div 
@@ -120,22 +136,31 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
                   clipPath: 'polygon(50% 50%, 50% 0, 100% 0, 100% 50%)'
                 }}
               >
-                <div className={`w-full h-full ${act.color} opacity-80`} />
+                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 flex items-center justify-center p-4`}>
+                   {/* Mini Icons on wheel */}
+                </div>
               </div>
             ))}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-12 h-12 bg-white rounded-full shadow-lg z-30 flex items-center justify-center">
+                 <Heart className="w-6 h-6 text-primary fill-primary" />
+              </div>
+            </div>
           </motion.div>
         </div>
         
-        <Button 
-          size="lg" 
-          className="rounded-full px-12 py-6 text-xl font-bold shadow-xl hover-elevate"
-          onClick={handleSpin}
-          disabled={isSpinning}
-        >
-          {isSpinning ? <Loader2 className="animate-spin mr-2" /> : "Spin the Wheel!"}
-        </Button>
-        <p className="text-sm text-muted-foreground text-center">Let fate decide your next activity!</p>
-      </div>
+        <div className="space-y-4 w-full text-center">
+          <Button 
+            size="lg" 
+            className="w-full rounded-2xl h-16 text-xl font-bold shadow-2xl hover-elevate bg-gradient-to-r from-primary to-accent border-0"
+            onClick={handleSpin}
+            disabled={isSpinning}
+          >
+            {isSpinning ? <Loader2 className="animate-spin mr-2" /> : "SPIN THE WHEEL!"}
+          </Button>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">Let fate decide your next activity</p>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4">
         <div className="flex items-center justify-between px-2">
