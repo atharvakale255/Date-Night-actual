@@ -136,13 +136,13 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
                   clipPath: 'polygon(50% 50%, 50% 0, 100% 0, 100% 50%)'
                 }}
               >
-                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 flex items-center justify-center p-4 relative`}>
+                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 relative`}>
                    <div 
-                     className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+                     className="absolute top-1/4 left-3/4 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5"
                      style={{ transform: `rotate(${(360 / activities.length) / 2}deg)` }}
                    >
-                     <act.icon className="w-5 h-5 text-white/90 drop-shadow-sm" />
-                     <span className="text-[8px] font-black text-white/90 uppercase tracking-tighter whitespace-nowrap drop-shadow-sm">
+                     <act.icon className="w-5 h-5 text-white drop-shadow-md" />
+                     <span className="text-[7px] font-black text-white uppercase tracking-tighter whitespace-nowrap drop-shadow-md bg-black/10 px-1 rounded-sm">
                        {act.title.split(' ')[0]}
                      </span>
                    </div>
