@@ -89,16 +89,18 @@ export async function registerRoutes(
   // Create Room
   app.post(api.rooms.create.path, async (req, res) => {
     try {
-      const { name, avatar } = api.rooms.create.input.parse(req.body);
+      console.log("Room Create Request Body:", req.body);
+      const { name, avatar, metDate } = api.rooms.create.input.parse(req.body);
       const code = Math.random().toString(36).substring(2, 6).toUpperCase();
       const room = await storage.createRoom(code);
-      if (req.body.metDate) {
-        await storage.updateRoomMetDate(room.id, new Date(req.body.metDate));
+      if (metDate) {
+        await storage.updateRoomMetDate(room.id, new Date(metDate));
       }
       const player = await storage.createPlayer(room.id, name, avatar || "🙂");
       res.status(201).json({ roomCode: code, playerId: player.id, roomId: room.id });
-    } catch (err) {
-      res.status(400).json({ message: "Invalid input" });
+    } catch (err: any) {
+      console.error("Room Create Error:", err);
+      res.status(400).json({ message: "Invalid input", details: err?.errors || err?.message });
     }
   });
 
