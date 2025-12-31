@@ -9,6 +9,8 @@ import { PicksModal } from "@/components/picks-modal";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
+import { useSound } from "@/hooks/use-sound";
+
 interface DashboardProps {
   room: any;
   players: any[];
@@ -18,6 +20,7 @@ interface DashboardProps {
 
 export default function DashboardPhase({ room, players, currentPlayer, otherPlayer }: DashboardProps) {
   const nextPhase = useNextPhase();
+  const { playSound } = useSound();
   const [isPicksOpen, setIsPicksOpen] = useState(false);
   const [currentPick, setCurrentPick] = useState<any>(null);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -36,6 +39,7 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
   const handleSpin = async () => {
     if (isSpinning) return;
     setIsSpinning(true);
+    playSound('spin');
 
     const randomIndex = Math.floor(Math.random() * activities.length);
     const selected = activities[randomIndex];
@@ -48,6 +52,7 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
       transition: { duration: 3, ease: "circOut" }
     });
 
+    playSound('win');
     setTimeout(() => {
       nextPhase.mutate({ code: room.code, phase: selected.id, round: 1 });
     }, 500);

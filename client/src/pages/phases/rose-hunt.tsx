@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import { useNextPhase } from "@/hooks/use-game";
 import canvasConfetti from "canvas-confetti";
+import { useSound } from "@/hooks/use-sound";
 
 export default function RoseHuntPhase({ room }: { room: any }) {
   const nextPhase = useNextPhase();
+  const { playSound } = useSound();
   const [boxes, setBoxes] = useState<number[]>([]);
   const [roseIndex, setRoseIndex] = useState(-1);
   const [found, setFound] = useState(false);
 
   const initGame = () => {
+    playSound('click');
     const newRoseIndex = Math.floor(Math.random() * 9);
     setRoseIndex(newRoseIndex);
     setBoxes(new Array(9).fill(0));
@@ -27,6 +30,7 @@ export default function RoseHuntPhase({ room }: { room: any }) {
     if (found) return;
     if (index === roseIndex) {
       setFound(true);
+      playSound('win');
       canvasConfetti({
         particleCount: 150,
         spread: 70,
@@ -34,6 +38,7 @@ export default function RoseHuntPhase({ room }: { room: any }) {
         colors: ["#ff0000", "#ff69b4", "#ffffff"]
       });
     } else {
+      playSound('pop');
       const newBoxes = [...boxes];
       newBoxes[index] = 1; // Mark as empty
       setBoxes(newBoxes);
