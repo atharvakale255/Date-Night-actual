@@ -7,6 +7,7 @@ import { Film, Music, Heart, Brain, Zap, Users, HelpCircle, Gift, Loader2 } from
 import { differenceInDays } from "date-fns";
 import { PicksModal } from "@/components/picks-modal";
 import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 interface DashboardProps {
   room: any;
@@ -115,59 +116,62 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
         )}
       </motion.div>
 
-      {/* Spin the Wheel Section */}
-      <Card className="p-10 flex flex-col items-center gap-8 bg-gradient-to-br from-white/80 to-purple-50/50 border-purple-100/50 shadow-purple-500/10">
-        <div className="relative w-56 h-56">
-          {/* Arrow indicator */}
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-primary filter drop-shadow-md" />
-          
-          <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full -z-10 animate-pulse" />
-          
+      <Card className="p-8 flex flex-col items-center gap-8 bg-gradient-to-br from-white/80 to-purple-50/50 border-purple-100/50 shadow-purple-500/10">
+        <div className="text-center space-y-2">
+          <h4 className="text-2xl font-display text-primary">Wheel of Fate</h4>
+          <p className="text-sm text-muted-foreground">Tap to spin and decide your next adventure!</p>
+        </div>
+
+        <div className="relative w-64 h-64 flex items-center justify-center">
+          {/* Main Wheel Design */}
           <motion.div 
             animate={controls}
-            className="w-full h-full rounded-full border-[10px] border-white shadow-[0_0_40px_rgba(0,0,0,0.1)] relative overflow-hidden bg-white"
+            className="w-full h-full rounded-full border-[12px] border-white shadow-2xl relative bg-white flex items-center justify-center overflow-hidden"
           >
+            {/* Minimalist Segment Dividers */}
+            <div className="absolute inset-0">
+              {activities.map((_, i) => (
+                <div 
+                  key={i}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-0.5 h-full bg-slate-100 origin-center"
+                  style={{ transform: `rotate(${(360 / activities.length) * i}deg)` }}
+                />
+              ))}
+            </div>
+
+            {/* Icons floating in slices */}
             {activities.map((act, i) => (
               <div 
                 key={act.id}
-                className={`absolute top-0 left-0 w-full h-full origin-center`}
-                style={{ 
-                  transform: `rotate(${(360 / activities.length) * i}deg)`,
-                  clipPath: 'polygon(50% 50%, 50% 0, 100% 0, 100% 50%)'
-                }}
+                className="absolute inset-0 flex items-start justify-center pt-6"
+                style={{ transform: `rotate(${(360 / activities.length) * i + (360 / activities.length / 2)}deg)` }}
               >
-                <div className={`w-full h-full ${act.color} opacity-90 border-r-2 border-white/20 relative`}>
-                   <div 
-                     className="absolute top-[18%] left-[72%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0"
-                     style={{ transform: `rotate(${(360 / activities.length) / 2}deg)` }}
-                   >
-                     <act.icon className="w-4 h-4 text-white drop-shadow-md" />
-                     <span className="text-[6px] font-black text-white uppercase tracking-tighter whitespace-nowrap drop-shadow-md">
-                       {act.title.split(' ')[0]}
-                     </span>
-                   </div>
+                <div className={cn("p-3 rounded-2xl shadow-lg text-white", act.color)}>
+                  <act.icon className="w-6 h-6" />
                 </div>
               </div>
             ))}
+
+            {/* Center Heart Hub */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 bg-white rounded-full shadow-lg z-30 flex items-center justify-center border-4 border-pink-50">
-                 <Heart className="w-6 h-6 text-primary fill-primary animate-pulse" />
+              <div className="w-16 h-16 bg-white rounded-full shadow-xl z-30 flex items-center justify-center border-4 border-pink-50">
+                 <Heart className="w-8 h-8 text-primary fill-primary animate-pulse" />
               </div>
             </div>
           </motion.div>
+
+          {/* Indicator Pointer */}
+          <div className="absolute -right-4 top-1/2 -translate-y-1/2 z-40 w-0 h-0 border-t-[15px] border-t-transparent border-b-[15px] border-b-transparent border-r-[30px] border-r-primary drop-shadow-md" />
         </div>
         
-        <div className="space-y-4 w-full text-center">
-          <Button 
-            size="lg" 
-            className="w-full rounded-2xl h-16 text-xl font-bold shadow-2xl hover-elevate bg-gradient-to-r from-primary to-accent border-0"
-            onClick={handleSpin}
-            disabled={isSpinning}
-          >
-            {isSpinning ? <Loader2 className="animate-spin mr-2" /> : "SPIN THE WHEEL!"}
-          </Button>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">Let fate decide your next activity</p>
-        </div>
+        <Button 
+          size="lg" 
+          className="w-full rounded-3xl h-16 text-xl font-bold shadow-2xl hover-elevate bg-gradient-to-r from-primary to-accent border-0"
+          onClick={handleSpin}
+          disabled={isSpinning}
+        >
+          {isSpinning ? <Loader2 className="animate-spin mr-2" /> : "SPIN TO START!"}
+        </Button>
       </Card>
 
       <div className="grid grid-cols-1 gap-4">
