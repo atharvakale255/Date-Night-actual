@@ -13,18 +13,33 @@ const SEED_QUESTIONS = [
   { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
   { category: "quiz", text: "What food could I eat every day?", options: ["Pizza", "Paneer", "Momo", "Pasta"] },
   { category: "quiz", text: "What's my biggest pet peeve?", options: ["Loud chewing", "Being late", "Slow internet", "Messy rooms"] },
-  { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
-  { category: "quiz", text: "What is your fav snack?", options: ["Chocolate", "Chips", "Fruits", "Cookies"] },
-  
+  { category: "quiz", text: "Perfect date night?", options: ["Movie", "Late night food run", "Long drive + music", "Games"] },
+  { category: "quiz", text: "Who gets sleepy first?", options: ["Me", "You", "Depends on the day", "Dumb question to ask"] },
+  { category: "quiz", text: "What matters more?", options: ["Time together", "Effort", "Trust", "Idk"] },
+  { category: "quiz", text: "When I'm sad I want you to give me", options: ["Space", "Comfort", "Distraction", "Pics.. 👁👁"] },
+  { category: "quiz", text: "My love language is closest to", options: ["Words", "Time", "Surprises", "..Pics 👁👁"] },
+
   // This or That
   { category: "this_that", text: "Morning person or Night owl?", options: ["Morning", "Night"] },
   { category: "this_that", text: "Coffee or Tea?", options: ["Coffee", "Tea"] },
   { category: "this_that", text: "Movie night or Clubbing?", options: ["Movie", "Club"] },
-  
+  { category: "this_that", text: "Hearing your voice or seeing your face?", options: ["Voice", "Face"] },
+  { category: "this_that", text: "Bullying or flirting?", options: ["Bullying", "Flirting"] },
+  { category: "this_that", text: "Pics or VN?", options: ["Pics", "VN"] },
+  { category: "this_that", text: "Needing assurance or needing space?", options: ["Assurance", "Space"] },
+  { category: "this_that", text: "Emotional talks or distractions?", options: ["Talks", "Distractions"] },
+  { category: "this_that", text: "Planning the future or living the present?", options: ["Future", "Present"] },
+  { category: "this_that", text: "Big milestone or small daily moments?", options: ["Milestone", "Daily moments"] },
+
   // Likely
   { category: "likely", text: "Who is more likely to survive a zombie apocalypse?", options: ["Me", "Partner"] },
   { category: "likely", text: "Who is more likely to cry at a movie?", options: ["Me", "Partner"] },
   { category: "likely", text: "Who is the better cook?", options: ["Me", "Partner"] },
+  { category: "likely", text: "Who is more likely to text all day?", options: ["Me", "Partner"] },
+  { category: "likely", text: "Who is more likely to get taller? 👁👁", options: ["Me", "Partner"] },
+  { category: "likely", text: "Who is more likely to overthink silently?", options: ["Me", "Partner"] },
+  { category: "likely", text: "Who is more likely to send pics or VN?", options: ["Me", "Partner"] },
+  { category: "likely", text: "Who is more likely to want to play games together?", options: ["Me", "Partner"] },
 
   // Dare
   { category: "dare", text: "Stare contest! Don't blink for 30 seconds.", options: [] },
@@ -38,6 +53,11 @@ const SEED_QUESTIONS = [
   { category: "would_you_rather", text: "Would you rather have the perfect job or perfect relationship?", options: ["Perfect job", "Perfect relationship"] },
   { category: "would_you_rather", text: "Would you rather go back to the past or forward to the future?", options: ["Past", "Future"] },
   { category: "would_you_rather", text: "Would you rather always have to sing or always have to dance?", options: ["Sing", "Dance"] },
+  { category: "would_you_rather", text: "Would you rather text all day or only at night?", options: ["All day", "Only at night"] },
+  { category: "would_you_rather", text: "Would you rather not use the word 'lauda' or get taller? 👁👁", options: ["No lauda", "Get taller"] },
+  { category: "would_you_rather", text: "Would you rather overthink silently or say everything out loud?", options: ["Silently", "Out loud"] },
+  { category: "would_you_rather", text: "Would you rather give pics or give VN?", options: ["Pics", "VN"] },
+  { category: "would_you_rather", text: "Would you rather play games together or watch movies together?", options: ["Games", "Movies"] },
 ];
 
 // Seed data for picks
@@ -70,13 +90,19 @@ const SEED_PICKS = [
 
 async function seed() {
   const existing = await storage.getAllQuestions();
-  if (existing.length === 0) {
-    await storage.seedQuestions(SEED_QUESTIONS);
+  const existingTexts = new Set(existing.map(q => q.text));
+  const newQuestions = SEED_QUESTIONS.filter(q => !existingTexts.has(q.text));
+  
+  if (newQuestions.length > 0) {
+    await storage.seedQuestions(newQuestions);
   }
   
   const existingPicks = await storage.getAllPicks();
-  if (existingPicks.length === 0) {
-    await storage.seedPicks(SEED_PICKS);
+  const existingPickContents = new Set(existingPicks.map(p => p.content));
+  const newPicks = SEED_PICKS.filter(p => !existingPickContents.has(p.content));
+  
+  if (newPicks.length > 0) {
+    await storage.seedPicks(newPicks);
   }
 }
 
