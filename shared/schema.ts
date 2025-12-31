@@ -25,7 +25,8 @@ export const players = pgTable("players", {
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
-  category: text("category").notNull(), // quiz, this_that, likely, dare
+  category: text("category").notNull(), // quiz, this_that, likely, dare, would_you_rather
+  subCategory: text("sub_category"), // Hobbies, Food, Media, etc.
   text: text("text").notNull(),
   options: jsonb("options"), // Array of strings for choices
 });
