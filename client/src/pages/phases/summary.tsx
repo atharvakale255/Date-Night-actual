@@ -133,11 +133,11 @@ export default function SummaryPhase({ room, players, responses, questions }: Su
           variant="outline"
           size="lg"
           className="w-full rounded-2xl h-14 text-lg font-bold shadow-lg hover-elevate"
-          onClick={() => setLocation("/")}
+          onClick={() => nextPhase.mutate({ code: room.code, phase: "dashboard", round: 1 })}
           data-testid="button-main-menu"
         >
           <Home className="w-5 h-5 mr-2" />
-          Back to Main Menu
+          Back to Menu
         </Button>
       </div>
     </div>

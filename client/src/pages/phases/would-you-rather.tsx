@@ -142,11 +142,17 @@ export default function WouldYouRatherPhase({ room, players, questions, response
             <Button 
               size="lg" 
               className="w-full"
-              onClick={() => nextPhase.mutate({ code: room.code })}
+              onClick={() => {
+                if (questionIndex >= wyrQuestions.length - 1) {
+                  nextPhase.mutate({ code: room.code, phase: "summary", round: 1 });
+                } else {
+                  nextPhase.mutate({ code: room.code, phase: "would_you_rather", round: room.round + 1 });
+                }
+              }}
               disabled={nextPhase.isPending}
               data-testid="button-next-question"
             >
-              Next Question
+              {questionIndex >= wyrQuestions.length - 1 ? "Finish Game" : "Next Question"}
             </Button>
           ) : (
             <p className="text-center text-muted-foreground animate-pulse text-sm">Waiting for host...</p>
