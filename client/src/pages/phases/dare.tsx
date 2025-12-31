@@ -21,8 +21,8 @@ export default function DarePhase({ room, questions, currentPlayer }: DareProps)
   // Get dare questions (category = 'dare')
   const dareQuestions = questions.filter(q => q.category === 'dare');
   
-  // Get current dare based on round
-  const dareIndex = (room.round - 1) % dareQuestions.length;
+  // Get current dare based on round (round starts at 1, so subtract 1 for array index)
+  const dareIndex = Math.max(0, Math.min(room.round - 1, dareQuestions.length - 1));
   const currentDare = dareQuestions[dareIndex] || dareQuestions[0];
 
   const handleComplete = () => {

@@ -25,7 +25,9 @@ export default function LikelyPhase({ room, players, questions, responses, curre
   
   const roomQuestionIds = (room.likelyQuestions as number[]) || [];
   const likelyQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
-  const currentQ = likelyQuestions[(room.round - 1) % likelyQuestions.length];
+  // Handle round-based indexing: round starts at 1, so subtract 1 for array index
+  const questionIndex = Math.max(0, Math.min(room.round - 1, likelyQuestions.length - 1));
+  const currentQ = likelyQuestions[questionIndex];
 
   const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
   const matches = roomQuestionIds.filter(id => {

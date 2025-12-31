@@ -25,7 +25,9 @@ export default function QuizPhase({ room, players, questions, responses, current
   
   const roomQuestionIds = (room.quizQuestions as number[]) || [];
   const quizQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
-  const currentQ = quizQuestions[(room.round - 1) % quizQuestions.length];
+  // Handle round-based indexing: round starts at 1, so subtract 1 for array index
+  const questionIndex = Math.max(0, Math.min(room.round - 1, quizQuestions.length - 1));
+  const currentQ = quizQuestions[questionIndex];
 
   const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
   const matches = roomQuestionIds.filter(id => {

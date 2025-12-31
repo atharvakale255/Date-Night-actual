@@ -53,7 +53,13 @@ export class DatabaseStorage implements IStorage {
     const allQuestions = await this.getAllQuestions();
     const getRandomQuestions = (category: string) => {
       const filtered = allQuestions.filter(q => q.category === category);
-      return filtered.sort(() => 0.5 - Math.random()).slice(0, 10).map(q => q.id);
+      // Fisher-Yates shuffle for proper randomization
+      const shuffled = [...filtered];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.slice(0, 10).map(q => q.id);
     };
 
     const quizIds = getRandomQuestions('quiz');
@@ -63,7 +69,7 @@ export class DatabaseStorage implements IStorage {
     const [room] = await db.insert(rooms).values({ 
       code, 
       phase: "lobby", 
-      round: 0,
+      round: 1,
       quizQuestions: quizIds,
       thisThatQuestions: thisThatIds,
       likelyQuestions: likelyIds

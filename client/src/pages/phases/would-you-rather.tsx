@@ -22,7 +22,9 @@ export default function WouldYouRatherPhase({ room, players, questions, response
   const nextPhase = useNextPhase();
   
   const wyrQuestions = questions.filter(q => q.category === 'would_you_rather');
-  const currentQ = wyrQuestions[(room.round - 1) % wyrQuestions.length];
+  // Handle round-based indexing: round starts at 1, so subtract 1 for array index
+  const questionIndex = Math.max(0, Math.min(room.round - 1, wyrQuestions.length - 1));
+  const currentQ = wyrQuestions[questionIndex];
 
   const myResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === currentPlayer.id);
   const partnerResponse = responses.find(r => r.questionId === currentQ?.id && r.playerId === otherPlayer?.id);

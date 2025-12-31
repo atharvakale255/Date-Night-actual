@@ -25,7 +25,9 @@ export default function ThisThatPhase({ room, players, questions, responses, cur
   
   const roomQuestionIds = (room.thisThatQuestions as number[]) || [];
   const ttQuestions = questions.filter(q => roomQuestionIds.includes(q.id));
-  const currentQ = ttQuestions[(room.round - 1) % ttQuestions.length];
+  // Handle round-based indexing: round starts at 1, so subtract 1 for array index
+  const questionIndex = Math.max(0, Math.min(room.round - 1, ttQuestions.length - 1));
+  const currentQ = ttQuestions[questionIndex];
 
   const allResponses = responses.filter(r => roomQuestionIds.includes(r.questionId));
   const matches = roomQuestionIds.filter(id => {

@@ -152,9 +152,11 @@ export function useSubmitResponse() {
       return api.responses.submit.responses[201].parse(await res.json());
     },
     onSuccess: (_, variables) => {
-      // We don't have code here easily, but standard invalidation works if we knew the code.
-      // Since polling is active, this is less critical, but good for snappy UI.
-      queryClient.invalidateQueries({ queryKey: [api.rooms.status.path] });
+      // Invalidate all room status queries to refresh UI immediately
+      queryClient.invalidateQueries({ 
+        queryKey: [api.rooms.status.path],
+        exact: false 
+      });
     }
   });
 }

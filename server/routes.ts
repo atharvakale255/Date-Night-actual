@@ -91,7 +91,12 @@ export async function registerRoutes(
     try {
       console.log("Room Create Request Body:", req.body);
       const { name, avatar, metDate } = api.rooms.create.input.parse(req.body);
-      const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+      // Generate proper alphanumeric room code (4 characters)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 4; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)];
+      }
       const room = await storage.createRoom(code);
       if (metDate) {
         await storage.updateRoomMetDate(room.id, new Date(metDate));
