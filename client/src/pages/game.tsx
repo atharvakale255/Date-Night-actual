@@ -16,6 +16,7 @@ import QuizPhase from "./phases/quiz";
 import ThisThatPhase from "./phases/this-that";
 import LikelyPhase from "./phases/likely";
 import DarePhase from "./phases/dare";
+import RoseHuntPhase from "./phases/rose-hunt";
 import SummaryPhase from "./phases/summary";
 import MovieNightPhase from "./phases/movie-night.tsx";
 import MusicTogetherPhase from "./phases/music-together.tsx";
@@ -62,6 +63,7 @@ export default function Game() {
     case 'this_that': PhaseComponent = ThisThatPhase; break;
     case 'likely': PhaseComponent = LikelyPhase; break;
     case 'dare': PhaseComponent = DarePhase; break;
+    case 'rose_hunt': PhaseComponent = RoseHuntPhase; break;
     case 'would_you_rather': PhaseComponent = WouldYouRatherPhase; break;
     case 'summary': PhaseComponent = SummaryPhase; break;
     case 'movie_night': PhaseComponent = MovieNightPhase; break;

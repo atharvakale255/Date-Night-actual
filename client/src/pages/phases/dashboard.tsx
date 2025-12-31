@@ -25,6 +25,7 @@ export default function DashboardPhase({ room, players, currentPlayer, otherPlay
 
   const activities = [
     { id: 'quiz', title: 'Couples Quiz', icon: Brain, color: 'bg-pink-500', description: 'Test how well you know each other' },
+    { id: 'rose_hunt', title: 'Rose Hunt', icon: Heart, color: 'bg-red-500', description: 'Find the hidden rose for a surprise' },
     { id: 'would_you_rather', title: 'Would You Rather', icon: HelpCircle, color: 'bg-rose-500', description: 'Fun choice game' },
     { id: 'this_that', title: 'This or That', icon: Zap, color: 'bg-yellow-500', description: 'Quick choices' },
     { id: 'likely', title: 'Most Likely To', icon: Users, color: 'bg-green-500', description: 'Who would do it?' },
