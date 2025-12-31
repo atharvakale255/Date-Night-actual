@@ -128,7 +128,9 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 
 // === SCHEMAS ===
 
-export const insertRoomSchema = createInsertSchema(rooms).omit({ id: true, createdAt: true });
+export const insertRoomSchema = createInsertSchema(rooms, {
+  metDate: z.string().optional().nullable(),
+}).omit({ id: true, createdAt: true });
 export const insertPlayerSchema = createInsertSchema(players).omit({ id: true, joinedAt: true, score: true });
 export const insertQuestionSchema = createInsertSchema(questions).omit({ id: true });
 export const insertResponseSchema = createInsertSchema(responses).omit({ id: true });

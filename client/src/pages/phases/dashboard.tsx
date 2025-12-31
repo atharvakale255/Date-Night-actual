@@ -8,7 +8,6 @@ import { differenceInDays } from "date-fns";
 import { PicksModal } from "@/components/picks-modal";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-
 import { useSound } from "@/hooks/use-sound";
 
 interface DashboardProps {
